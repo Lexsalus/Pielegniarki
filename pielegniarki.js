@@ -34,7 +34,10 @@ const plural=(n,a,b,c)=>`${n} ${n===1?a:[2,3,4].includes(n%10)&&![12,13,14].incl
 
 /* --- style zakładki --- */
 document.head.insertAdjacentHTML('beforeend',`<style>
-.nzmain{display:grid;grid-template-columns:300px minmax(0,1fr) 360px;gap:14px;align-items:start}
+.nzmain{display:grid;grid-template-columns:300px minmax(0,1fr) 360px;grid-template-areas:"list map card" "rule rule rule";gap:14px;align-items:start}
+.nzmain>.nzlistw{grid-area:list}.nzmain>.nzmapw{grid-area:map}.nzmain>.nzcardw{grid-area:card}.nzmain>#nzrule{grid-area:rule}
+/* szeroki ekran: panel przydziału obok mapy (pod kartą pielęgniarki) */
+@media(min-width:1800px){.nzmain{grid-template-columns:320px minmax(0,1fr) clamp(480px,32%,760px);grid-template-areas:"list map card" "list map rule";grid-template-rows:auto 1fr}.nzmain>#nzrule .g2{grid-template-columns:1fr}#nzmap{height:680px}.nzlist{max-height:680px}}
 .nzlist{max-height:620px;overflow:auto;padding:10px}
 .nzrow{display:flex;gap:10px;align-items:center;padding:9px 8px;border-radius:10px;cursor:pointer;border:1px solid transparent}
 .nzrow:hover{background:var(--card2)}.nzrow.on{border-color:var(--accent);background:var(--card2)}
@@ -65,8 +68,8 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 .nzflow span{background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:5px 9px}
 .nzpool td{padding:6px}.nzpool td:nth-child(2){white-space:nowrap}
 .nzcardw .tabs .tab{padding:8px 7px;font-size:.82rem}
-@media(max-width:1260px){.nzmain{grid-template-columns:280px minmax(0,1fr)}.nzmain>.nzcardw{grid-column:1/-1}}
-@media(max-width:860px){.nzmain{grid-template-columns:1fr}#nzmap{height:420px}.nzweek{grid-template-columns:34px repeat(7,minmax(0,1fr))}}
+@media(max-width:1260px){.nzmain{grid-template-columns:280px minmax(0,1fr);grid-template-areas:"list map" "card card" "rule rule"}}
+@media(max-width:860px){.nzmain{grid-template-columns:1fr;grid-template-areas:"list" "map" "card" "rule"}#nzmap{height:420px}.nzweek{grid-template-columns:34px repeat(7,minmax(0,1fr))}}
 </style>`);
 
 /* =====================================================================
@@ -251,12 +254,12 @@ function mainView(){
   const ns=NZ.D.nurses,c=k=>ns.filter(n=>n.status===k).length;
   return `<div class="ph"><div><h1>Pielęgniarki <span class="mut" style="font-size:.95rem;font-weight:600">${ns.length} łącznie · ${c('aktywna')} aktywne · ${c('urlop')} na urlopie · ${c('do_weryfikacji')} do weryfikacji</span></h1></div>
     <div style="display:flex;gap:8px"><button class="btn" onclick="orderModal()">+ Nowe zlecenie</button><button class="btn pri" onclick="nurseModal()">+ Dodaj pielęgniarkę</button></div></div>
-  <div class="nzmain"><div class="card" style="padding:0"><div style="padding:12px 12px 0"><input class="f" id="nzq" placeholder="Szukaj pielęgniarki…" value="${esc(NZ.f.q)}">
+  <div class="nzmain"><div class="card nzlistw" style="padding:0"><div style="padding:12px 12px 0"><input class="f" id="nzq" placeholder="Szukaj pielęgniarki…" value="${esc(NZ.f.q)}">
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px">${nzSel('city','Miasto',[...new Set(ns.map(n=>n.city).filter(Boolean))].map(x=>[x,x]))}${nzSel('svc','Usługa',NZ.D.services.map(s=>[s.id,s.name]))}${nzSel('st','Status',Object.entries(NST))}</div></div>
       <div class="nzlist" id="nzlist"></div></div>
-    <div><div class="chips" style="margin-bottom:8px" id="nzlayers"></div><div id="nzmap"></div><p class="hint">Kolor pielęgniarki jest ten sam na liście, mapie, w kalendarzu i panelu przydziału. Linia przerywana = zmiana czekająca na decyzję. Piny = punkty bazowe.</p></div>
-    <div class="nzcardw"><div class="card" id="nzcard"></div></div></div>
-  <div class="card" id="nzrule" style="margin-top:14px"></div>`;
+    <div class="nzmapw"><div class="chips" style="margin-bottom:8px" id="nzlayers"></div><div id="nzmap"></div><p class="hint">Kolor pielęgniarki jest ten sam na liście, mapie, w kalendarzu i panelu przydziału. Linia przerywana = zmiana czekająca na decyzję. Piny = punkty bazowe.</p></div>
+    <div class="nzcardw"><div class="card" id="nzcard"></div></div>
+  <div class="card" id="nzrule"></div></div>`;
 }
 const nzSel=(k,l,opts)=>`<select class="f" data-nzf="${k}" style="font-size:.8rem;padding:6px"><option value="">${l}</option>${opts.map(([v,t])=>`<option value="${esc(v)}" ${NZ.f[k]===v?'selected':''}>${esc(t)}</option>`).join('')}</select>`;
 const filtered=()=>NZ.D.nurses.filter(n=>(!NZ.f.q||n.full_name.toLowerCase().includes(NZ.f.q.toLowerCase()))&&(!NZ.f.city||n.city===NZ.f.city)&&(!NZ.f.st||n.status===NZ.f.st)&&(!NZ.f.svc||NZ.D.links.some(l=>l.nurse_id===n.id&&l.service_id===NZ.f.svc)));

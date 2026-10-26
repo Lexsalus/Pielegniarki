@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.5.0] — 2026-10-26
+- Duże monitory: widoki z mapą i tabelami na całą szerokość, panel przydziału obok mapy (od 1800 px), formularze w czytelnej szerokości; telefon pionowo: przyciski (język, motyw, powiadomienia) nad menu
+
 ## [1.4.1] — 2026-10-26
 - Telefon pionowo: krótka strona (np. Aktywni) nie rozciąga paska z menu; długie limity czasu jako „X godz. Y min” / „X dni Y godz.”
 
