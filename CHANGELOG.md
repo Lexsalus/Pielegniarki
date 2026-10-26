@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.4.1] — 2026-10-26
+- Telefon pionowo: krótka strona (np. Aktywni) nie rozciąga paska z menu; długie limity czasu jako „X godz. Y min” / „X dni Y godz.”
+
 ## [1.4.0] — 2026-10-26
 - Wygląd na telefonie: nic nie wychodzi poza ekran, w pionie lewy pasek jako pasek u góry, w poziomie lewy pasek i zakładki zawsze widoczne (zakładki w lewym pasku), zwijany wybór języka, ikona wylogowania, karty pielęgniarki z zakładkami w dwóch rzędach
 

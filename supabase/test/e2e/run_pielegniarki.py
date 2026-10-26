@@ -264,6 +264,8 @@ async def main():
           if not bb or not (w-bb['x']-bb['width']<=24 and h-bb['y']-bb['height']<=24 and bb['x']>0 and bb['y']>0): okk=False; print('FAB',w,h,hsh,bb)
         if w==844: await pg.click('#chatFab'); await pg.wait_for_timeout(500); bx=await pg.locator('#chatBox').bounding_box(); okk=okk and bx['y']>=0 and bx['y']+bx['height']<=h; await pg.screenshot(path=HERE+'czat_poziomo.png'); await pg.click('#chatFab')
         if w==390: await pg.click('#chatFab'); await pg.wait_for_timeout(500); bx=await pg.locator('#chatBox').bounding_box(); okk=okk and bx['x']>=0 and bx['x']+bx['width']<=w; await pg.screenshot(path=HERE+'czat_pionowo.png'); await pg.click('#chatFab')
+      await pg.set_viewport_size({'width':390,'height':2400}); await nav('#/aktywni',700); ah=await pg.evaluate("document.querySelector('aside').getBoundingClientRect().height")
+      ok(ah<90,f'Telefon pionowo: krótka strona nie rozciąga paska z menu ({round(ah)} px)'); await pg.set_viewport_size({'width':1440,'height':950})
       ok(okk,'Telefon (pion / poziom): dymek czatu w rogu, nic nie wychodzi poza ekran, w poziomie zakładki w lewym pasku')
     if 'index.html' in U:   # --- powiadomienie o nowej wersji
       await pg.set_viewport_size({'width':1440,'height':950}); await nav('#/pielegniarki',600)

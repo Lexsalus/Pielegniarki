@@ -130,6 +130,7 @@ const I18N_ROWS=[
 ['Przeczytane przez:','Прочитано:','Read by:'],
 ['Wylogowano po {n} min bezczynności','Вихід після {n} хв бездіяльності','Signed out after {n} min of inactivity'],
 ['Zalogowanych teraz (bez Ciebie): {n}','Зараз у мережі (без вас): {n}','Online now (excluding you): {n}'],['Nikt inny nie jest teraz zalogowany','Ніхто інший зараз не в мережі','No one else is online now'],
+['{n} godz. {n} min','{n} год {n} хв','{n} h {n} min'],['{n} dni {n} godz.','{n} дн. {n} год','{n} days {n} h'],['{n} dzień {n} godz.','{n} день {n} год','{n} day {n} h'],
 // --- role
 ['Administrator','Адміністратор','Administrator'],
 ['Pełnomocnik','Повірений','Attorney'],

@@ -254,6 +254,7 @@ select.f{text-overflow:ellipsis}
 .nzmain .card [style*="grid-template-columns:1fr 1fr 1fr"]{grid-template-columns:repeat(3,minmax(0,1fr))!important}
 @media(max-width:1100px){.mename{display:none}.me{gap:8px}}
 @media(max-width:760px){
+  #app{grid-template-rows:auto 1fr;align-content:start}   /* krótka strona nie rozciąga paska z menu */
   .content .grid[style*="grid-template-columns"]{grid-template-columns:1fr!important}
   aside{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;align-items:center;gap:6px;padding:8px 10px;border-right:0;border-bottom:1px solid var(--line)}
   .brand{width:auto;padding:4px 6px;flex:none}.brand .ver{display:none}
@@ -265,7 +266,7 @@ select.f{text-overflow:ellipsis}
 }
 /* telefon w poziomie: lewy pasek i górny pasek zawsze widoczne */
 @media(orientation:landscape) and (max-height:520px){
-  #app{grid-template-columns:180px 1fr}
+  #app{grid-template-columns:180px 1fr;grid-template-rows:none}
   .nztop{display:none}.sidetabs{display:flex}
   aside{position:sticky;top:0;height:100vh;height:100dvh;flex-direction:column;flex-wrap:nowrap;overflow:auto;padding:10px 8px;border-right:1px solid var(--line);border-bottom:0;align-items:stretch}
   .brand{width:100%;padding:2px 6px 10px;font-size:.92rem}.brand .ver{display:none}

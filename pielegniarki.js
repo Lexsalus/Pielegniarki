@@ -234,10 +234,13 @@ ROUTES.pielegniarki.after=(sub='',id)=>{
   if(sub==='')mountMain();else if(sub==='obszar')mountEditor();else if(sub==='dzielnica')mountDistrictEditor();
   if(!NZ.ticked){NZ.ticked=1;sb.rpc('nurse_tick').then(r=>{if(r.data>0)reload().then(rerender)})}
 };
+/* pozostały czas: do godziny m:ss, do doby „X godz. Y min”, dłużej „X dni Y godz.” */
+function fLeft(s){if(s<3600)return `${Math.floor(s/60)}:${pad(s%60)}`;const h=Math.floor(s/3600),m=Math.floor(s%3600/60);
+  if(h<24)return `${h} godz. ${m} min`;const d=Math.floor(h/24),hh=h%24;return `${d} ${d===1?'dzień':'dni'} ${hh} godz.`}
 function tickCountdowns(){
   if(!/^#\/(pielegniarki|podglad)/.test(location.hash)){clearInterval(NZ.timer);return}
   let expired=false;
-  $$('[data-exp]').forEach(el=>{const s=Math.round((new Date(el.dataset.exp)-Date.now())/1000);if(s<=0){el.textContent='czas minął';if(!el.dataset.done){el.dataset.done=1;expired=true}}else el.textContent=`${Math.floor(s/60)}:${pad(s%60)}`});
+  $$('[data-exp]').forEach(el=>{const s=Math.round((new Date(el.dataset.exp)-Date.now())/1000);if(s<=0){el.textContent='czas minął';if(!el.dataset.done){el.dataset.done=1;expired=true}}else el.textContent=fLeft(s)});
   if(expired)sb.rpc('nurse_tick').then(()=>reload()).then(rerender);
 }
 
