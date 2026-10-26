@@ -240,6 +240,7 @@ tr.click{cursor:pointer}tr.click:hover td{background:var(--card2)}
 @supports (-moz-appearance:none){*{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--mut) 45%,transparent) transparent}}
 
 /* ===== telefon i wąskie ekrany ===== */
+.devi{font-size:.85rem;cursor:help;margin-left:2px}
 .lgt td{vertical-align:top;font-size:.82rem}.lgt tr.lgerr td{background:color-mix(in srgb,var(--bad) 10%,transparent)}
 @media(max-width:1500px){.cmdl{display:none}}
 .sidetabs{display:none;flex-direction:column;gap:1px;margin:2px 0 6px 14px;padding-left:8px;border-left:2px solid var(--line)}
@@ -472,7 +473,16 @@ addEventListener('hashchange',route);
 const rerender=()=>route();
 
 /* --- Aktywni: kto jest teraz zalogowany (tylko Administrator) --- */
-const ping=st=>sb.rpc('presence_ping',{p_state:st}).then(()=>{},()=>{});
+/* urządzenie: phone / tablet / desktop (+ aplikacja) i krótki opis przeglądarki — do ikonki 📱 / 💻 przy osobie */
+const devKind=()=>{const u=navigator.userAgent,tab=/iPad|Tablet/.test(u)||(/Android/.test(u)&&!/Mobile/.test(u))||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const kind=tab?'tablet':/Mobi|iPhone|Android/.test(u)?'phone':'desktop',app=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+  const b=/Edg\//.test(u)?'Edge':/OPR\//.test(u)?'Opera':/Firefox\//.test(u)?'Firefox':/Chrome\//.test(u)?'Chrome':/Safari\//.test(u)?'Safari':'przeglądarka';
+  const o=/Android/.test(u)?'Android':/iPhone|iPad/.test(u)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)?'iOS':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'macOS':/Linux/.test(u)?'Linux':'';
+  return `${kind}|${b}${o?' / '+o:''}${app?' · aplikacja':''}`};
+let PING_DEV=true;
+const ping=st=>sb.rpc('presence_ping',PING_DEV?{p_state:st,p_device:devKind()}:{p_state:st}).then(r=>{if(r?.error&&PING_DEV){PING_DEV=false;return sb.rpc('presence_ping',{p_state:st})}},()=>{});
+const DEVI={phone:['📱','Telefon'],tablet:['📱','Tablet'],desktop:['💻','Komputer']};
+const devIcon=d=>{if(!d)return '';const [k,info]=String(d).split('|');const x=DEVI[k];return x?`<span class="devi" data-tip="${esc(x[1]+(info?' · '+info:''))}">${x[0]}</span>`:''};
 setInterval(()=>{if(ME)ping('ping')},60000);
 const dt=v=>v?new Date(v).toLocaleString(LOC(),{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
 const ago=v=>{if(!v)return '—';const m=Math.round((Date.now()-new Date(v))/60000);return m<1?'przed chwilą':m<60?m+' min temu':m<1440?Math.floor(m/60)+' godz. temu':dt(v)};
@@ -483,7 +493,7 @@ async function akLoad(){const box=$('#akBox');if(!box)return;
   const {data,error}=await sb.rpc('active_users');if(!$('#akBox'))return;
   if(error){box.innerHTML=`<div class="empty">Błąd: ${esc(errMsg(error))}</div>`;return}
   const rows=data||[];AKROWS=rows;const on=rows.filter(r=>r.online).length;$('#akSum').textContent=`${on} teraz · ${rows.length} kont aktywnych`;
-  box.innerHTML=rows.length?`<div class="tw"><table><tr><th>Użytkownik</th><th>Rola</th><th>Status</th><th>Zalogowany od</th><th>Ostatnia aktywność</th><th>Polecenia</th></tr>${rows.map(r=>`<tr><td><b>${esc(r.full_name||r.email)}</b><br><small class="mut">${esc(r.email)}</small></td><td>${esc(ROLES[r.role]||r.role)}</td><td>${r.status==='busy'?'<span class="badge b-warn">● Zajęty</span>':r.online?'<span class="badge b-good">● Aktywny teraz</span>':r.logout_at?'<span class="badge">Wylogowany</span>':'<span class="badge">Nieaktywny</span>'}</td><td>${r.online?dt(r.login_at):'—'}</td><td>${r.logout_at?'wylogowanie '+ago(r.logout_at):ago(r.last_seen)}</td><td style="white-space:nowrap"><button class="btn sm" type="button" data-tip="Logi: co ta osoba klikała, przejścia między widokami i błędy (30 dni)" onclick="logView('${r.user_id}')">📋 <span class="cmdl">Logi</span></button> ${r.user_id===ME.id?'<span class="mut small">to Ty</span>':cmdBtns("'"+r.user_id+"'")}</td></tr>`).join('')}</table></div>`:'<div class="empty">Brak kont</div>'}
+  box.innerHTML=rows.length?`<div class="tw"><table><tr><th>Użytkownik</th><th>Rola</th><th>Status</th><th>Zalogowany od</th><th>Ostatnia aktywność</th><th>Polecenia</th></tr>${rows.map(r=>`<tr><td><b>${esc(r.full_name||r.email)}</b> ${devIcon(r.device)}<br><small class="mut">${esc(r.email)}</small></td><td>${esc(ROLES[r.role]||r.role)}</td><td>${r.status==='busy'?'<span class="badge b-warn">● Zajęty</span>':r.online?'<span class="badge b-good">● Aktywny teraz</span>':r.logout_at?'<span class="badge">Wylogowany</span>':'<span class="badge">Nieaktywny</span>'}</td><td>${r.online?dt(r.login_at):'—'}</td><td>${r.logout_at?'wylogowanie '+ago(r.logout_at):ago(r.last_seen)}</td><td style="white-space:nowrap"><button class="btn sm" type="button" data-tip="Logi: co ta osoba klikała, przejścia między widokami i błędy (30 dni)" onclick="logView('${r.user_id}')">📋 <span class="cmdl">Logi</span></button> ${r.user_id===ME.id?'<span class="mut small">to Ty</span>':cmdBtns("'"+r.user_id+"'")}</td></tr>`).join('')}</table></div>`:'<div class="empty">Brak kont</div>'}
 setInterval(()=>{if(ME&&location.hash.startsWith('#/aktywni')&&document.visibilityState==='visible')akLoad()},60000);
 
 /* =====================================================================

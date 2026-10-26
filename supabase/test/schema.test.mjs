@@ -420,3 +420,14 @@ R((await as('admin',`select * from public.user_logs_for($1,24,true)`,[U.nowak]))
 R((await as('nowak',`select * from public.user_logs_for($1,24,false)`,[U.nowak])).rows.length===0&&(await as('nowak',`select * from public.user_logs`)).rows.length===0,'Logi: czyta tylko Administrator');
 R(!!await fails('nowak',`insert into public.user_logs(user_id,kind) values($1,'click')`,[U.admin]),'Logi: bez bezpośredniego zapisu');
 R((await as('nowak',`select public.log_batch($1::jsonb) n`,[JSON.stringify(Array.from({length:250},()=>({kind:'click'})))])).rows[0].n===200,'Logi: maks. 200 wpisów w paczce');
+// --- Urządzenie przy osobie (migracja 012)
+await as('admin',`select public.set_my_status('online')`);
+await as('nowak',`select public.presence_ping('ping','phone|Chrome / Android · aplikacja')`);
+R((await as('admin',`select device from public.active_users() where user_id=$1`,[U.nowak])).rows[0].device==='phone|Chrome / Android · aplikacja','Urządzenie: zapisane przy sygnale obecności');
+await as('admin',`select public.presence_ping('ping','desktop|Edge / Windows')`);
+R((await cs('nowak')).contacts.find(c=>c.user_id===U.admin).device==='desktop|Edge / Windows','Urządzenie: widoczne w komunikatorze');
+await as('admin',`select public.set_my_status('invisible')`);
+R(!(await cs('nowak')).contacts.find(c=>c.user_id===U.admin).device&&!(await as('admin2',`select device from public.active_users() where user_id=$1`,[U.admin])).rows[0].device,'Urządzenie: ukryte przy statusie Niewidoczny');
+await as('admin',`select public.set_my_status('online')`);
+await as('nowak',`select public.presence_ping('ping')`);
+R((await as('admin',`select device from public.active_users() where user_id=$1`,[U.nowak])).rows[0].device==='phone|Chrome / Android · aplikacja','Urządzenie: sygnał bez urządzenia nie kasuje ostatniego');

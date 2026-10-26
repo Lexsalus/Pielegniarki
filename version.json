@@ -1,6 +1,6 @@
 {
-  "version": "1.7.0",
+  "version": "1.8.0",
   "date": "2026-10-26",
-  "notes": "Logi działań użytkowników (kliknięcia, widoki, błędy; bez treści pól i czatu) — podgląd 📋 przy osobie w „Aktywni”, filtr błędów, eksport CSV, przechowywanie 30 dni (migracja 012)",
+  "notes": "Ikonka urządzenia przy osobie (📱 telefon / 💻 komputer, z opisem przeglądarki i informacją o aplikacji) w „Aktywni” i komunikatorze (migracja 012)",
   "relogin": false
 }

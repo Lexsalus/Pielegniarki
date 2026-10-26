@@ -197,6 +197,7 @@ async def main():
       sql("update public.user_presence set logout_at=now() where user_id=(select id from public.profiles where email='nowak@k.test')")
       await nav('#/aktywni',1200); a=await T('#view')
       ok('Aktywny teraz' in a and 'Admin' in a and 'Wylogowany' in a,'Aktywni: Administrator aktywny teraz, wylogowana pielęgniarka')
+      ok(await pg.locator('#akBox tr:has-text("admin@k.test") .devi').count()==1 and '💻' in await T('#akBox tr:has-text("admin@k.test")'),'Aktywni: ikonka urządzenia (💻 komputer)')
       ok(await T('#nzTop')=='','Aktywni: bez zakładek panelu w górnym pasku')
       await pg.screenshot(path=HERE+'aktywni.png')
       await nav('#/pielegniarki/ustawienia',900); ok(await pg.locator('#nzcfg .hlp').count()>=8,'Ustawienia: ikonki [?] przy polach')

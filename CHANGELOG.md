@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.8.0] — 2026-10-26
+- Ikonka urządzenia przy osobie (📱 telefon / 💻 komputer, z opisem przeglądarki i informacją o aplikacji) w „Aktywni” i komunikatorze (migracja 012)
+
 ## [1.7.0] — 2026-10-26
 - Logi działań użytkowników (kliknięcia, widoki, błędy; bez treści pól i czatu) — podgląd 📋 przy osobie w „Aktywni”, filtr błędów, eksport CSV, przechowywanie 30 dni (migracja 012)
 
