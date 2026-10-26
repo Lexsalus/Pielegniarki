@@ -483,12 +483,12 @@ async function afterSignIn(){
   ME={id:p.id,name:p.full_name||p.email,role:p.role,email:p.email,color:p.color};
   try{await reload()}catch(e){console.error(e);return toast('Nie udało się wczytać danych: '+errMsg(e),true)}
   if(!sessionStorage.getItem('crm_logged_'+p.id)){sessionStorage.setItem('crm_logged_'+p.id,1);sb.rpc('log_login',{p_action:'logowanie'});ping('login')}else ping('ping');
-  $('#login').style.display='none';$('#app').style.display='grid';
+  $('#login').style.display='none';$('#app').style.display='grid';rlStart();RL.full=Date.now();RL.last=DB.notifs?.[0]?.created_at||null;
   if(!can('nurses')){await sb.auth.signOut();return loginView('noperm',{email:user.email})}
   if(!/^#\/(pielegniarki|aktywni|podglad)/.test(location.hash))location.hash='#/pielegniarki';else route();
 }
 function renderLogin(){loginView('password')}
-$('#logout').onclick=async()=>{try{await sb.rpc('log_login',{p_action:'wylogowanie'});await ping('logout')}catch(e){}await sb.auth.signOut();sessionStorage.clear();ME=null;DB=null;$('#app').style.display='none';$('#login').style.display='grid';loginView('password');history.replaceState(null,'',location.pathname)};
+$('#logout').onclick=async()=>{rlStop();try{await sb.rpc('log_login',{p_action:'wylogowanie'});await ping('logout')}catch(e){}await sb.auth.signOut();sessionStorage.clear();ME=null;DB=null;$('#app').style.display='none';$('#login').style.display='grid';loginView('password');history.replaceState(null,'',location.pathname)};
 
 
 sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY'){$('#login').style.display='grid';$('#app').style.display='none';loginView('newpass')}});
@@ -497,7 +497,24 @@ addEventListener('DOMContentLoaded',async()=>{
   const {data:{session}}=await sb.auth.getSession();
   if(session)await afterSignIn();else loginView('password');
 });
-setInterval(async()=>{if(ME&&NZ.D&&document.visibilityState==='visible'&&!$('#modal').classList.contains('show')&&!location.hash.includes('/obszar')){await reload();renderShell()}},60000);
+/* odświeżanie danych: co minutę tylko lekkie sprawdzenie (najnowsze powiadomienie); pełne pobranie
+   gdy przyszło nowe powiadomienie albo co 5 min. Powiadomienia przychodzą też na żywo (Realtime). */
+const RL={full:Date.now(),last:null,rt:null};
+const rlBusy=()=>!ME||!NZ.D||document.visibilityState!=='visible'||$('#modal').classList.contains('show')||location.hash.includes('/obszar');
+async function rlFull(){if(rlBusy())return;RL.full=Date.now();await reload();RL.last=DB.notifs?.[0]?.created_at||null;renderShell()}
+async function rlCheck(){if(rlBusy())return;
+  if(Date.now()-RL.full>=300000)return rlFull();
+  const r=await sb.from('notifications').select('id,created_at').eq('recipient_id',ME.id).order('created_at',{ascending:false}).limit(1);
+  const top=r.data?.[0]?.created_at||null;if(RL.last===null)RL.last=DB.notifs?.[0]?.created_at||null;
+  if(top&&top!==RL.last)await rlFull()}
+setInterval(rlCheck,60000);
+function rlStart(){if(RL.rt||typeof sb.channel!=='function'||!ME)return;
+  try{RL.rt=sb.channel('powiadomienia').on('postgres_changes',{event:'*',schema:'public',table:'notifications',filter:'recipient_id=eq.'+ME.id},()=>rlFull()).subscribe()}catch(e){console.warn('realtime',e)}}
+function rlStop(){if(RL.rt){try{sb.removeChannel(RL.rt)}catch(e){}RL.rt=null}}
+
+/* wylogowanie po 30 min bezczynności (jak w CRM kancelarii) */
+const IDLE_MIN=30;let idleAt=Date.now();['mousemove','keydown','click','scroll','touchstart'].forEach(ev=>addEventListener(ev,()=>{idleAt=Date.now()},{passive:true}));
+setInterval(()=>{if(ME&&Date.now()-idleAt>IDLE_MIN*60000){idleAt=Date.now();$('#logout').click();setTimeout(()=>toast(`Wylogowano po ${IDLE_MIN} min bezczynności`),500)}},30000);
 </script>
 <script src="pielegniarki.js"></script>
 <script src="czat.js"></script>

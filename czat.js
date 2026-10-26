@@ -72,9 +72,10 @@ addEventListener('keydown',e=>{if(e.key==='Escape'&&CH.open&&!$('#modal').classL
 
 /* odświeżanie: na żywo (Supabase Realtime), a dodatkowo co 10 s */
 function chatStart(){chatSync();
-  if(!CH.rt&&typeof sb.channel==='function'){try{CH.rt=sb.channel('czat').on('postgres_changes',{event:'*',schema:'public',table:'chat_messages'},()=>chatSync()).subscribe()}catch(e){console.warn('realtime',e)}}}
-function chatStop(){CH.open=false;CH.state=null;chatDraw();chatBadge();if(CH.rt){try{sb.removeChannel(CH.rt)}catch(e){}CH.rt=null}}
-setInterval(()=>{if(ME&&document.visibilityState==='visible')chatSync()},10000);
+  if(!CH.rt&&typeof sb.channel==='function'){try{CH.rt=sb.channel('czat').on('postgres_changes',{event:'*',schema:'public',table:'chat_messages'},()=>chatSync()).subscribe(st=>{CH.live=st==='SUBSCRIBED'})}catch(e){console.warn('realtime',e)}}}
+function chatStop(){CH.open=false;CH.state=null;chatDraw();chatBadge();if(CH.rt){try{sb.removeChannel(CH.rt)}catch(e){}CH.rt=null}CH.live=false}
+/* zapasowe sprawdzanie: co 30 s, gdy działa połączenie na żywo, inaczej co 10 s */
+setInterval(()=>{if(!ME||document.visibilityState!=='visible')return;CH.tick=(CH.tick||0)+1;if(!CH.live||CH.tick%3===0)chatSync()},10000);
 {const base=renderShell;renderShell=function(){base.apply(this,arguments);if(ME&&!CH.started){CH.started=true;chatStart()}chatBadge()}}
 {const lo=$('#logout').onclick;$('#logout').onclick=async e=>{chatStop();CH.started=false;await lo(e)}}
 

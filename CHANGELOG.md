@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.3.0] — 2026-10-26
+- Poprawki bezpieczeństwa: zabezpieczone dymki na mapie, lista kont tylko w potrzebnym zakresie, wylogowanie po 30 min bezczynności, mniej zapytań do bazy (powiadomienia na żywo), zamknięty stary formularz zgłoszeń (migracja 009) *(wymaga ponownego zalogowania)*
+
 ## [1.2.1] — 2026-10-26
 - Dzwonek: „Przeczytane przez: X”, gdy odbiorca przeczyta Twoją wiadomość (migracja 008)
 

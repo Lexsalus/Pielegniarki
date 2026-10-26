@@ -23,7 +23,7 @@ supabase/           schema.sql (użytkownicy, role, audyt, powiadomienia) + migr
 
 ## Baza
 
-Supabase, projekt **CRMKP** (`ixlhfhzgzotukstoezcj`, UE, Irlandia) — tylko dla tego panelu (od 26.10.2026 PiK ma własną bazę). Wdrożone: `schema.sql`, migracje 002–005 („Aktywni”, „Podgląd” — wdrożona 26.10.2026); 006 (komunikator) — wdrożona 26.10.2026; 007 (telefon, status) — wdrożona 26.10.2026; 008 (powiadomienie o odczycie) — wdrożona 26.10.2026, pg_cron `zlecenia-limit-czasu` (co minutę) i `przypomnienia-terminy`. Logowanie (Auth): Site URL i Redirect URLs — `https://lexsalus.github.io/Pielegniarki/`; rejestracja wyłączona, 2FA (TOTP) włączone.
+Supabase, projekt **CRMKP** (`ixlhfhzgzotukstoezcj`, UE, Irlandia) — tylko dla tego panelu (od 26.10.2026 PiK ma własną bazę). Wdrożone: `schema.sql`, migracje 002–005 („Aktywni”, „Podgląd” — wdrożona 26.10.2026); 006 (komunikator) — wdrożona 26.10.2026; 007 (telefon, status) — wdrożona 26.10.2026; 008 (powiadomienie o odczycie) — wdrożona 26.10.2026; 009 (poprawki bezpieczeństwa) — czeka na wdrożenie, pg_cron `zlecenia-limit-czasu` (co minutę) i `przypomnienia-terminy`. Logowanie (Auth): Site URL i Redirect URLs — `https://lexsalus.github.io/Pielegniarki/`; rejestracja wyłączona, 2FA (TOTP) włączone.
 
 Pozostałości po CRM kancelarii w tej bazie (puste tabele spraw, klientów, finansów, terminów, formularz `leads` z zapisem anonimowym) nie są używane — do usunięcia osobną migracją po decyzji właściciela.
 
@@ -44,13 +44,22 @@ Klucz w `index.html` to klucz publiczny (`sb_publishable_…`) — może być ja
 
 `supabase/seed/dane_testowe.sql` — 8 pielęgniarek „TEST …” w różnych konfiguracjach (dzielnice, całe miasto + promień, wielokąt, urlop, do weryfikacji, zmiany do zatwierdzenia), usługi, uproszczone dzielnice Warszawy, cenniki 5 miast z nadpisaniem stawki, 4 reguły przydziału (proporcjonalnie, kolejka z limitem, po kolei, ręcznie), zlecenia we wszystkich statusach, lista oczekujących, dokumenty (jedno OC przeterminowane). Usunięcie: `supabase/seed/usun_dane_testowe.sql` (wpisy w dzienniku audytu zostają).
 
+## Bezpieczeństwo (przegląd 26.10.2026)
+
+- Teksty z danych na mapie (dymki) są zabezpieczane przed wstrzyknięciem kodu; w atrybutach `onclick` tylko identyfikatory, nazwy przez `data-*`.
+- Lista kont: każdy widzi siebie, Administrator / dyspozytor — wszystkich, pozostali tylko osoby, z którymi mogą pisać.
+- Wylogowanie po 30 min bezczynności.
+- Odświeżanie: co minutę lekkie sprawdzenie najnowszego powiadomienia, pełne pobranie po nowym powiadomieniu albo co 5 min; powiadomienia i czat na żywo (Realtime), zapasowe sprawdzanie czatu co 30 s.
+- Zgłoszenia ze strony (`leads`, pozostałość po CRM kancelarii) bez zapisu anonimowego.
+- Do decyzji: 2FA dla pielęgniarek; adresy pacjentów wysyłane do OpenStreetMap / Google przy wyszukiwaniu i liczeniu dojazdu; podpisy kontrolne (SRI) bibliotek z CDN; usunięcie pustych tabel CRM kancelarii.
+
 ## Reguły pilnowane przez bazę
 
 Pielęgniarka widzi tylko siebie i własne zlecenia (bez ceny dla klienta i marży) i nie zatwierdza sama obszaru ani terminarza. Zlecenia zmieniają się wyłącznie przez funkcje (`create_nurse_order`, `dispatch_order`, `respond_order`, `advance_order`). Przed regułą przydziału działają twarde filtry: obszar, wolny termin, usługa, limit dzienny. Każde zlecenie wymaga akceptacji pielęgniarki (limit czasu → następna z puli → dyspozytor). Operacje trafiają do dziennika audytu.
 
 ## Testy
 
-`supabase/test/` — opis w `supabase/test/e2e/README.md`. Wynik 26.10.2026: reguły bazy 181/181, interfejs 88/88.
+`supabase/test/` — opis w `supabase/test/e2e/README.md`. Wynik 26.10.2026: reguły bazy 187/187, interfejs 88/88.
 
 ## Rozstrzygnięcia tam, gdzie projekt milczy (do potwierdzenia albo zmiany)
 

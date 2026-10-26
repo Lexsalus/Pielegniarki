@@ -1,6 +1,6 @@
 # Test panelu pielęgniarek przez interfejs (lokalna kopia bazy)
 
-`server.mjs` uruchamia lokalnie PostgreSQL (PGlite) z `../../schema.sql` i migracjami 002–008 oraz udaje API Supabase; `shim.js` podmienia supabase-js w przeglądarce testowej.
+`server.mjs` uruchamia lokalnie PostgreSQL (PGlite) z `../../schema.sql` i migracjami 002–009 oraz udaje API Supabase; `shim.js` podmienia supabase-js w przeglądarce testowej.
 
 ```
 cd supabase/test && npm i @electric-sql/pglite@0.4.6 leaflet@1.9.4 && cp -r node_modules e2e/

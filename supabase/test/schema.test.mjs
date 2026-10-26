@@ -120,8 +120,8 @@ R((await db.query(`select count(*)::int n from public.audit_log where action='up
 R(!!await fails('jan',`insert into public.permission_overrides(user_id,perm,level,reason) values($1,'audit',2,'chcę widzieć')`,[U.jan]),'nadawać uprawnienia może tylko Administrator');
 R(!!await fails('admin',`update public.profiles set role='att' where id=$1`,[U.admin]),'nie można usunąć ostatniego Administratora');
 // --- zgłoszenia ze strony (anon)
-await as('anon',`insert into public.leads(category,calc,client_name,phone,consent) values('SKD','{"name":"SKD"}','Zofia Test','500100200',true)`);
-R(true,'anonimowy formularz: INSERT zgłoszenia działa');
+await db.query(`insert into public.leads(category,calc,client_name,phone,consent) values('SKD','{"name":"SKD"}','Zofia Test','500100200',true)`);   // od migracji 009 bez zapisu anonimowego
+R(true,'zgłoszenie testowe dodane (od migracji 009 bez zapisu anonimowego)');
 R(!!await fails('anon',`select * from public.leads`),'anonimowy nie odczyta zgłoszeń');
 R(!!await fails('anon',`insert into public.leads(category,client_name,phone,consent,status) values('SKD','X Y','500100200',true,'przyjęte')`),'anonimowy nie ustawi statusu');
 R(!!await fails('anon',`select * from public.cases`),'anonimowy: brak dostępu do spraw');
@@ -371,3 +371,10 @@ await as('nowak',`select public.chat_read(p_with=>$1)`,[U.admin]);
 R((await as('admin',`select * from public.notifications where event_type='czat.odczyt'`)).rows.length===1,'Odczyt: ponowne otwarcie bez nowych wiadomości — bez kolejnego powiadomienia');
 await as('admin',`select public.chat_read(p_with=>$1)`,[U.nowak]);
 R(!!(await as('admin',`select * from public.notifications where event_type='czat.odczyt'`)).rows[0].read_at,'Odczyt: otwarcie rozmowy oznacza powiadomienie jako odczytane');
+// --- Bezpieczeństwo (migracja 009)
+R(!!await fails('anon',`insert into public.leads(category,client_name,phone,email,message,consent) values('SKD','X','1','a@b.c','m',true)`),'Zgłoszenia ze strony: bez zapisu bez logowania');
+const pv1=(await as('nowak',`select email from public.profiles`)).rows.map(r=>r.email);
+R(pv1.includes('nowak@k.test')&&pv1.includes('admin@k.test')&&!pv1.includes('kowal@k.test')&&!pv1.includes('jan@k.test'),'Konta: pielęgniarka widzi siebie i Administratorów, nie inne pielęgniarki');
+R((await as('admin',`select count(*)::int n from public.profiles`)).rows[0].n>=8,'Konta: Administrator widzi wszystkie');
+R((await db.query(`select count(*)::int n from pg_proc p join pg_namespace s on s.oid=p.pronamespace where s.nspname='app' and p.proname in ('audit_readonly','path_case','rings_has','km','pip','member_guard','align') and p.proconfig is null`)).rows[0].n===0,'Funkcje pomocnicze: stała ścieżka wyszukiwania');
+R(+(await db.query(`select app.km(52.0,21.0,52.1,21.0) v`)).rows[0].v>11,'Funkcje pomocnicze działają po zmianie');

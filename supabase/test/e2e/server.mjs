@@ -26,7 +26,7 @@ for(const [e,[id]] of Object.entries(USERS))await db.query('insert into auth.use
 for(const [e,[id,role,name]] of Object.entries(USERS))if(role)await db.query('update public.profiles set role=$2,active=true,full_name=$3 where id=$1',[id,role,name]);
 // zgłoszenie ze strony (anon)
 const asRole=async(sub,aal,fn)=>{await db.exec('begin');try{await db.exec(`set local role ${sub?'authenticated':'anon'}`);await db.query(`select set_config('request.jwt.claim.sub',$1,true),set_config('request.jwt.claims',$2,true)`,[sub||'',JSON.stringify({aal})]);const r=await fn();await db.exec('commit');return r}catch(e){await db.exec('rollback');throw e}};
-await asRole(null,'aal1',()=>db.query(`insert into public.leads(category,calc,client_name,phone,email,message,consent) values('SKD',$1,'Zofia Testowa','500100200','z@test.pl','Kredyt gotówkowy z 2023',true)`,[JSON.stringify({name:'Sankcja kredytu darmowego',inputs:[{label:'Kwota wypłacona do ręki',value:30000,unit:'zł'}],outputs:[{label:'Szacowana korzyść',value:15894,unit:'zł',main:true}]})]));
+await (async f=>f())(()=>db.query(`insert into public.leads(category,calc,client_name,phone,email,message,consent) values('SKD',$1,'Zofia Testowa','500100200','z@test.pl','Kredyt gotówkowy z 2023',true)`,[JSON.stringify({name:'Sankcja kredytu darmowego',inputs:[{label:'Kwota wypłacona do ręki',value:30000,unit:'zł'}],outputs:[{label:'Szacowana korzyść',value:15894,unit:'zł',main:true}]})]));
 const PK={permission_overrides:['user_id','perm'],currencies:['code'],case_categories:['code'],assignment_pool:['rule_id','nurse_id'],nurse_service_links:['nurse_id','service_id'],nurse_settings:['id']};
 const ident=s=>{if(!/^[a-z_][a-z0-9_]*$/.test(s))throw new Error('bad ident '+s);return s};
 async function handle(q){

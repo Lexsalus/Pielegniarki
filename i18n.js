@@ -128,6 +128,7 @@ const I18N_ROWS=[
 ['Automatyczne wylogowanie za','Автоматичний вихід через','Automatic sign-out in'],
 ['Odśwież','Оновити','Refresh'],['Później','Пізніше','Later'],['Zaloguj ponownie','Увійти знову','Sign in again'],
 ['Przeczytane przez:','Прочитано:','Read by:'],
+['Wylogowano po {n} min bezczynności','Вихід після {n} хв бездіяльності','Signed out after {n} min of inactivity'],
 // --- role
 ['Administrator','Адміністратор','Administrator'],
 ['Pełnomocnik','Повірений','Attorney'],
