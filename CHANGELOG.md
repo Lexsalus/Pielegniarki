@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.1.0] — 2026-10-26
+- Telefon przy osobie (Konta, komunikator — szybkie połączenie 📞); status Administratora / dyspozytora: Dostępny / Zajęty / Niewidoczny, zapamiętywany po wylogowaniu; komunikat z dźwiękiem, gdy Administrator staje się dostępny (migracja 007)
+
 ## [1.0.2] — 2026-10-26
 - Dymek czatu zawsze w prawym dolnym rogu (każda zakładka, telefon pionowo i poziomo); okno czatu dopasowane do telefonu; powiadomienia nie zasłaniają dymka
 

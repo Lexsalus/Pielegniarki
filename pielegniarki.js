@@ -77,12 +77,12 @@ NZ.load=async()=>{
   if(!ME||!can('nurses'))return;
   const s=await sb.from('nurse_settings').select('*').limit(1);
   if(s.error){NZ.missing=true;return}
-  const T=nAdmin()?['nurse_services','nurses','nurse_service_links','nurse_documents','districts','nurse_areas','nurse_patterns','nurse_exceptions','price_zones','assignment_rules','assignment_pool','nurse_orders','order_attempts','nurse_waitlist']
+  const T=nAdmin()?['nurse_services','nurses','nurse_service_links','nurse_documents','districts','nurse_areas','nurse_patterns','nurse_exceptions','price_zones','assignment_rules','assignment_pool','nurse_orders','order_attempts','nurse_waitlist','user_contacts']
     :['nurse_services','nurses','nurse_service_links','districts','nurse_areas','nurse_patterns','nurse_exceptions'];
   const rows=await Promise.all(T.map(t=>fetchAll(t)));const R=Object.fromEntries(T.map((t,i)=>[t,rows[i]]));
   const D={cfg:s.data?.[0]||{},services:R.nurse_services||[],nurses:(R.nurses||[]).sort((a,b)=>a.full_name.localeCompare(b.full_name,'pl')),links:R.nurse_service_links||[],docs:R.nurse_documents||[],
     districts:R.districts||[],areas:R.nurse_areas||[],patterns:R.nurse_patterns||[],exceptions:R.nurse_exceptions||[],zones:R.price_zones||[],rules:R.assignment_rules||[],pool:R.assignment_pool||[],
-    orders:(R.nurse_orders||[]).sort((a,b)=>String(a.start_at).localeCompare(b.start_at)),attempts:R.order_attempts||[],waitlist:R.nurse_waitlist||[],myOrders:[],myRates:[]};
+    orders:(R.nurse_orders||[]).sort((a,b)=>String(a.start_at).localeCompare(b.start_at)),attempts:R.order_attempts||[],waitlist:R.nurse_waitlist||[],phones:Object.fromEntries((R.user_contacts||[]).map(x=>[x.user_id,x.phone])),myOrders:[],myRates:[]};
   D.districts.forEach(d=>{d.c=centroid(d.rings)});
   if(ME.role==='nurse'){D.me=D.nurses[0]||null;
     const [o,r]=await Promise.all([sb.rpc('my_orders'),sb.rpc('my_rates')]);D.myOrders=o.data||[];D.myRates=r.data||[];}
@@ -174,8 +174,8 @@ async function makeMap(el,{view,onClick,onMove}={}){
       line:(pts,o={})=>L.polyline(pts,{color:o.color||'#7c5cff',weight:2,dashArray:'4 4'}).addTo(g),
       circle:(lat,lng,km,o={})=>ev(L.circle([lat,lng],{radius:km*1000,color:o.color||'#7c5cff',weight:o.weight||2,fillOpacity:o.fill??.12,dashArray:o.dash?'6 6':null,interactive:o.interactive!==false}).addTo(g),o),
       marker:(lat,lng,o={})=>ev(L.marker([lat,lng],{icon:L.divIcon({className:'',html:`<span class="nzpin" style="background:${esc(o.color||'#7c5cff')}">${esc(o.label||'')}</span>`,iconSize:[26,26],iconAnchor:[13,13]})}).addTo(g),o),
-      fit:pts=>{if(pts.length)m.fitBounds(pts,{padding:[24,24],maxZoom:13})},
-      view:()=>({c:[m.getCenter().lat,m.getCenter().lng],z:m.getZoom()}),destroy:()=>m.remove()};
+      fit:pts=>{if(pts.length)m.fitBounds(pts,{padding:[24,24],maxZoom:13,animate:false})},
+      view:()=>({c:[m.getCenter().lat,m.getCenter().lng],z:m.getZoom()}),destroy:()=>{try{m.stop();m.off();m.remove()}catch(e){}}};
   }
   const G=google.maps,m=new G.Map(el,{center:{lat:v.c[0],lng:v.c[1]},zoom:v.z,mapTypeControl:true,mapTypeControlOptions:{mapTypeIds:['roadmap','hybrid'],style:G.MapTypeControlStyle.HORIZONTAL_BAR},streetViewControl:false});let ov=[];
   const P=([a,b])=>({lat:+a,lng:+b});if(onClick)m.addListener('click',e=>onClick(e.latLng.lat(),e.latLng.lng()));if(onMove)m.addListener('idle',()=>onMove({c:[m.getCenter().lat(),m.getCenter().lng()],z:m.getZoom()}));
@@ -779,13 +779,15 @@ function nzBadge0(){
 {const orig=settingsView;settingsView=()=>orig()+accountsCard()}
 function accountsCard(){
   const us=DB.users.slice().sort((a,b)=>(a.active===b.active?0:a.active?1:-1)||a.name.localeCompare(b.name,'pl'));
-  return `<div class="card" style="margin-top:14px"><h3>Konta</h3><div class="tw"><table><tr><th>Osoba</th><th>E-mail</th><th>Rola</th><th>Aktywne</th><th>Karta pielęgniarki</th><th></th></tr>
+  return `<div class="card" style="margin-top:14px"><h3>Konta</h3><div class="tw"><table><tr><th>Osoba</th><th>E-mail</th><th>Telefon</th><th>Rola</th><th>Aktywne</th><th>Karta pielęgniarki</th><th></th></tr>
     ${us.map(u=>{const n=NZ.D.nurses.find(x=>x.user_id===u.id),opts=[['nurse','Pielęgniarka'],['admin','Administrator']].concat(['nurse','admin'].includes(u.role)?[]:[[u.role,(ROLES[u.role]||u.role)+' — bez dostępu']]);
-      return `<tr style="${u.active?'':'opacity:.7'}"><td><b>${esc(u.name)}</b></td><td class="small">${esc(u.email)}</td><td><select class="f" id="acr_${u.id}" style="width:auto">${opts.map(([k,l])=>`<option value="${k}" ${u.role===k?'selected':''}>${esc(l)}</option>`).join('')}</select></td>
+      return `<tr style="${u.active?'':'opacity:.7'}"><td><b>${esc(u.name)}</b></td><td class="small">${esc(u.email)}</td><td><input class="f" id="acp_${u.id}" type="tel" style="width:150px" placeholder="+48 …" value="${esc(NZ.D.phones?.[u.id]||'')}"></td><td><select class="f" id="acr_${u.id}" style="width:auto">${opts.map(([k,l])=>`<option value="${k}" ${u.role===k?'selected':''}>${esc(l)}</option>`).join('')}</select></td>
         <td><label class="chk"><input type="checkbox" id="aca_${u.id}" ${u.active?'checked':''}></label></td><td class="small">${n?esc(n.full_name):'—'}</td><td><button class="btn sm" onclick="accSave('${u.id}')">Zapisz</button></td></tr>`}).join('')}</table></div>
     <p class="hint">Nowe konto zakłada Administrator w Supabase (Authentication → Users → Add user, Auto Confirm). Pojawi się tu jako nieaktywne — nadaj rolę, zaznacz „Aktywne” i zapisz, potem powiąż z kartą pielęgniarki (karta → Dane i usługi → Konto). W systemie musi zostać co najmniej jeden aktywny Administrator (pilnuje baza); każda zmiana trafia do audytu.</p></div>`;
 }
-const accSave=id=>{const u=DB.users.find(x=>x.id===id),role=$('#acr_'+id).value,active=$('#aca_'+id).checked;if(u.role===role&&!!u.active===active)return toast('Brak zmian');nsafe(async()=>chk(await sb.from('profiles').update({role,active}).eq('id',id)),'Zapisano konto')};
+const accSave=id=>{const u=DB.users.find(x=>x.id===id),role=$('#acr_'+id).value,active=$('#aca_'+id).checked,ph=$('#acp_'+id).value.trim(),phc=ph!==(NZ.D.phones?.[id]||'');
+  if(u.role===role&&!!u.active===active&&!phc)return toast('Brak zmian');
+  nsafe(async()=>{if(phc){chk(await sb.rpc('set_phone',{p_user:id,p_phone:ph}));NZ.D.phones[id]=ph}if(u.role!==role||!!u.active!==active)chk(await sb.from('profiles').update({role,active}).eq('id',id))},'Zapisano konto')};
 
 /* =====================================================================
    PODGLĄD „JAKO ROLA” / „JAKO OSOBA” (Administrator, tylko odczyt)
