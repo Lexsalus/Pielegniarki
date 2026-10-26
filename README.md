@@ -4,6 +4,10 @@ Panel administratora według projektu „Zakładka Pielęgniarki” (23.10.2026)
 
 🌐 **Adres:** https://lexsalus.github.io/Pielegniarki/ (logowanie, 2FA dla Administratora)
 
+## Wersja
+
+Numer wersji jest w jednym miejscu: `version.json` (pokazywany przy nazwie na ekranie logowania i w lewym pasku). Przy każdym wysłaniu zmian: `py bump.py patch|minor|major "opis"` — podbija numer i dopisuje wpis do `CHANGELOG.md`. Numeracja jest niezależna od PiK (osobna aplikacja, osobny `version.json`).
+
 ## Pliki
 
 ```

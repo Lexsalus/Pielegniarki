@@ -218,6 +218,7 @@ tr.click{cursor:pointer}tr.click:hover td{background:var(--card2)}
 .msg .meta{color:var(--mut);font-size:.7rem;margin-top:2px}.msg .who{color:var(--mut);font-size:.72rem;margin-bottom:2px}
 .ck{letter-spacing:-2px;margin-left:3px}.ck.rd{color:var(--info);font-weight:800}
 .chf{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}.chf textarea{flex:1;resize:none;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-height:42px;max-height:120px}
+.ver{font-size:.7rem;font-weight:700;color:var(--mut);background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:1px 7px;vertical-align:middle;margin-left:4px}
 </style>
 </head>
 <body>
@@ -318,11 +319,16 @@ document.addEventListener('click',async e=>{if(!e.target.closest?.('.pwabtn'))re
     :`<p>Przeglądarka nie pokazała okna instalacji. Spróbuj tak:</p><p>Android (Chrome): menu <b>⋮</b> → <b>Zainstaluj aplikację</b> albo <b>Dodaj do ekranu głównego</b>.</p><p>Komputer (Chrome / Edge): ikona instalacji na końcu paska adresu albo menu → <b>Zainstaluj</b>.</p>`}</div>`,{ok:'',cancel:'Zamknij'});
 });
 addEventListener('DOMContentLoaded',pwaShow);
+
+/* --- wersja: jedno źródło — version.json (podbija ją bump.py) --- */
+let APP_VER='';
+fetch('version.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(v=>{if(!v?.version)return;APP_VER=v.version;
+  if(ME)renderShell();else{const h=document.querySelector('#login h1');if(h&&!h.querySelector('.ver'))h.insertAdjacentHTML('beforeend',` <span class="ver" data-notr>v${esc(APP_VER)}</span>`)}}).catch(()=>{});
 /* --- menu i router --- */
 function renderShell(){
   const cnt=typeof nzBadge==='function'?nzBadge():0;
   const pg=location.hash.split('/')[1]||'pielegniarki';
-  $('#side').innerHTML=`<div class="brand"><i>🩺</i>Pielęgniarki</div><a class="nav ${pg==='pielegniarki'?'on':''}" href="#/pielegniarki">🩺 Pielęgniarki${cnt?`<span class="cnt">${cnt}</span>`:''}</a>${ME.role==='admin'?`<a class="nav ${pg==='aktywni'?'on':''}" href="#/aktywni" data-tip="Kto jest teraz zalogowany (otwarty panel w ciągu ostatnich 2 minut).">🟢 Aktywni</a><a class="nav ${pg==='podglad'?'on':''}" href="#/podglad" data-tip="Panel oczami wybranej roli lub osoby — tylko do odczytu.">👁 Podgląd</a>`:''}<div class="sp"></div>`;
+  $('#side').innerHTML=`<div class="brand"><i>🩺</i>Pielęgniarki${APP_VER?`<span class="ver" data-notr data-tip="Wersja panelu — lista zmian w CHANGELOG.md">v${esc(APP_VER)}</span>`:''}</div><a class="nav ${pg==='pielegniarki'?'on':''}" href="#/pielegniarki">🩺 Pielęgniarki${cnt?`<span class="cnt">${cnt}</span>`:''}</a>${ME.role==='admin'?`<a class="nav ${pg==='aktywni'?'on':''}" href="#/aktywni" data-tip="Kto jest teraz zalogowany (otwarty panel w ciągu ostatnich 2 minut).">🟢 Aktywni</a><a class="nav ${pg==='podglad'?'on':''}" href="#/podglad" data-tip="Panel oczami wybranej roli lub osoby — tylko do odczytu.">👁 Podgląd</a>`:''}<div class="sp"></div>`;
   const un=(DB.notifs||[]).filter(n=>!n.read_at).length;$('#bell').innerHTML='🔔'+(un?`<span class="dot">${un}</span>`:'');
   $('#meBox').innerHTML=`<span class="av" style="background:${esc(ME.color||'#7c5cff')}">${esc(initials(ME.name||'?'))}</span><div><b>${esc(ME.name)}</b><small>${esc(ROLES[ME.role]||'')}</small></div>`;
 }
@@ -402,7 +408,7 @@ async function ntAllRead(){await sb.from('notifications').update({read_at:new Da
 let SESSION_UID=null;
 function loginView(step,extra={}){
   const L=$('#login .lbox');
-  const head=`<div style="text-align:center;font-size:2rem">🩺</div><h1>Panel pielęgniarek</h1>`;
+  const head=`<div style="text-align:center;font-size:2rem">🩺</div><h1>Panel pielęgniarek ${APP_VER?`<span class="ver" data-notr>v${esc(APP_VER)}</span>`:''}</h1>`;
   const box=c=>`<div class="card" style="max-width:420px;margin:18px auto 0">${c}</div>`;
   if(step==='password')L.innerHTML=head+`<p>Zaloguj się kontem nadanym przez Administratora.</p>`+box(`<form id="lf" class="form" style="grid-template-columns:1fr">
     <label>E-mail<input class="f" type="email" name="email" required autocomplete="username" value="${esc(extra.email||'')}"></label>
