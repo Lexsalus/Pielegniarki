@@ -23,7 +23,7 @@ supabase/           schema.sql (użytkownicy, role, audyt, powiadomienia) + migr
 
 ## Baza
 
-Supabase, projekt **CRMKP** (`ixlhfhzgzotukstoezcj`, UE, Irlandia) — tylko dla tego panelu (od 26.10.2026 PiK ma własną bazę). Wdrożone: `schema.sql`, migracje 002–005 („Aktywni”, „Podgląd” — wdrożona 26.10.2026); 006 (komunikator) — wdrożona 26.10.2026; 007 (telefon, status) — wdrożona 26.10.2026; 008 (powiadomienie o odczycie) — czeka na wdrożenie, pg_cron `zlecenia-limit-czasu` (co minutę) i `przypomnienia-terminy`. Logowanie (Auth): Site URL i Redirect URLs — `https://lexsalus.github.io/Pielegniarki/`; rejestracja wyłączona, 2FA (TOTP) włączone.
+Supabase, projekt **CRMKP** (`ixlhfhzgzotukstoezcj`, UE, Irlandia) — tylko dla tego panelu (od 26.10.2026 PiK ma własną bazę). Wdrożone: `schema.sql`, migracje 002–005 („Aktywni”, „Podgląd” — wdrożona 26.10.2026); 006 (komunikator) — wdrożona 26.10.2026; 007 (telefon, status) — wdrożona 26.10.2026; 008 (powiadomienie o odczycie) — wdrożona 26.10.2026, pg_cron `zlecenia-limit-czasu` (co minutę) i `przypomnienia-terminy`. Logowanie (Auth): Site URL i Redirect URLs — `https://lexsalus.github.io/Pielegniarki/`; rejestracja wyłączona, 2FA (TOTP) włączone.
 
 Pozostałości po CRM kancelarii w tej bazie (puste tabele spraw, klientów, finansów, terminów, formularz `leads` z zapisem anonimowym) nie są używane — do usunięcia osobną migracją po decyzji właściciela.
 
