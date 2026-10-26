@@ -9,12 +9,14 @@ Panel administratora według projektu „Zakładka Pielęgniarki” (23.10.2026)
 ```
 index.html          powłoka: logowanie (e-mail + hasło, 2FA), uprawnienia, menu
 pielegniarki.js     cała zakładka: lista, mapa, karta, przydział, zlecenia, dostępność, oczekujący, ustawienia, panel pielęgniarki
-supabase/004_pielegniarki.sql   schemat bazy tej części (tabele, RLS, funkcje)
+supabase/           schema.sql (użytkownicy, role, audyt, powiadomienia) + migrations/002–004; test/ — reguły bazy i test przez interfejs
 ```
 
 ## Baza
 
-Na razie wspólna z CRM kancelarii: Supabase, projekt **CRMKP** (`ixlhfhzgzotukstoezcj`, UE). Migracja 004 jest tam wdrożona (26.10.2026) razem z zadaniem pg_cron `zlecenia-limit-czasu` (co minutę). Schemat bazowy (użytkownicy, role, uprawnienia, audyt, powiadomienia) jest w repo `Lexsalus/PiK` (`supabase/schema.sql`, migracje 002–003), bo z niego korzysta ta część.
+Supabase, projekt **CRMKP** (`ixlhfhzgzotukstoezcj`, UE, Irlandia) — tylko dla tego panelu (od 26.10.2026 PiK ma własną bazę). Wdrożone: `schema.sql`, migracje 002–004, pg_cron `zlecenia-limit-czasu` (co minutę) i `przypomnienia-terminy`. Logowanie (Auth): Site URL i Redirect URLs — `https://lexsalus.github.io/Pielegniarki/`; rejestracja wyłączona, 2FA (TOTP) włączone.
+
+Pozostałości po CRM kancelarii w tej bazie (puste tabele spraw, klientów, finansów, terminów, formularz `leads` z zapisem anonimowym) nie są używane — do usunięcia osobną migracją po decyzji właściciela.
 
 Klucz w `index.html` to klucz publiczny (`sb_publishable_…`) — może być jawny; dostęp ogranicza baza (RLS). Nigdy nie wpisywać klucza `sb_secret_…`.
 
@@ -22,8 +24,13 @@ Klucz w `index.html` to klucz publiczny (`sb_publishable_…`) — może być ja
 
 - **Administrator** (uprawnienie `nurses` = pełne): wszystko w zakładce.
 - **Pielęgniarka** (rola `nurse`): tylko własny panel — swoje zlecenia (przyjmij / odrzuć, statusy), obszar i terminarz do zatwierdzenia, własne wypłaty.
-- Konta zakłada Administrator w Supabase (Authentication → Users), rolę i aktywację nadaje w CRM kancelarii → Ustawienia → Użytkownicy (wspólna baza kont). Kartę pielęgniarki łączy z kontem: karta → Dane i usługi → Konto.
-- Konto bez uprawnienia „Pielęgniarki” po zalogowaniu dostaje komunikat o braku dostępu.
+- Nowe konto: Supabase → Authentication → Users → Add user (Auto Confirm), potem SQL Editor:
+
+```sql
+update public.profiles set role='nurse', active=true, full_name='Imię Nazwisko' where email='adres@pielegniarki.pl';
+```
+
+  Następnie w panelu: karta pielęgniarki → Dane i usługi → Konto. Konto bez uprawnienia „Pielęgniarki” po zalogowaniu dostaje komunikat o braku dostępu.
 
 ## Reguły pilnowane przez bazę
 
@@ -31,9 +38,21 @@ Pielęgniarka widzi tylko siebie i własne zlecenia (bez ceny dla klienta i mar�
 
 ## Testy
 
-Uruchamiane z repo `Lexsalus/PiK` (lokalna kopia bazy): reguły bazy `supabase/test/schema.test.mjs`, interfejs `supabase/test/e2e/run_pielegniarki.py` — dla tej aplikacji z `NZ_URL=http://localhost:8766/index.html` (repo serwowane na porcie 8766). Wynik 26.10.2026: 40/40.
+`supabase/test/` — opis w `supabase/test/e2e/README.md`. Wynik 26.10.2026: reguły bazy 120/120, interfejs 40/40.
 
-## Do zrobienia po stronie właściciela
+## Rozstrzygnięcia tam, gdzie projekt milczy (do potwierdzenia albo zmiany)
 
-- Supabase → Authentication → URL Configuration → **Redirect URLs**: dodać `https://lexsalus.github.io/Pielegniarki/` (linki resetu hasła).
-- Settings → Pages w tym repo: źródło „GitHub Actions” (workflow już jest).
+- Brak reguły przydziału dla miasta / dzielnicy → zlecenie do dyspozytora.
+- Cena dojazdu dla klienta ustalana przy zakładaniu zlecenia = najniższa strefa wśród pielęgniarek dostępnych w wybranym terminie (wypłata i strefa zapisywane dla osoby, która dostanie propozycję).
+- Obszar odrzucony przez Administratora wraca do szkicu z uwagą.
+- Wyjątki w terminarzu (urlop) pielęgniarka zgłasza od dziś, wzorzec — od następnego tygodnia.
+- Pielęgniarka widzi dane klienta dopiero po przyjęciu zlecenia (wcześniej adres i termin).
+
+## Propozycje (niewdrożone, decyzja właściciela)
+
+- Zarządzanie kontami (rola, aktywacja) w panelu zamiast SQL.
+- Formularz „Zamów badania w domu” dla klientów (strona 8 projektu); teraz zlecenia zakłada Administrator / dyspozytor.
+- 2FA obowiązkowe dla roli Pielęgniarka (dane zdrowotne, RODO).
+- Anulowanie zlecenia (brak takiego statusu w projekcie).
+- Powiadomienia SMS / e-mail o propozycji zlecenia.
+- Usunięcie z bazy pustych tabel CRM kancelarii.

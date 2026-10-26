@@ -464,7 +464,7 @@ function nurseModal(id){
     <label>Ocena (0–5)<input class="f" type="number" name="rating" min="0" max="5" step="0.1" value="${n.rating??''}"></label>
     <label>Konto do panelu pielęgniarki<select class="f" name="user"><option value="">— brak —</option>${accs.map(u=>`<option value="${u.id}" ${u.id===n.user_id?'selected':''}>${esc(u.name)} (${esc(u.email)})</option>`).join('')}</select></label>
     <div class="full fl">Usługi, które wykonuje<div class="chips">${NZ.D.services.map(s=>`<label class="chk" style="margin-right:8px"><input type="checkbox" name="s_${s.id}" ${mine.has(s.id)?'checked':''}>${esc(s.name)}</label>`).join('')||'<span class="mut">Dodaj usługi w Ustawieniach.</span>'}</div></div></div>
-    <p class="hint">Konto zakłada Administrator w Supabase (Authentication → Users), a w CRM → Ustawienia → Użytkownicy nadaje rolę „Pielęgniarka”. Pielęgniarka widzi wtedy tylko własny panel: obszar, terminarz, stawki i swoje zlecenia.</p>`,
+    <p class="hint">Konto zakłada Administrator w Supabase (Authentication → Users), potem nadaje rolę „Pielęgniarka” i aktywuje konto (README → Konta). Na liście pojawiają się tylko aktywne konta z tą rolą. Pielęgniarka widzi wtedy tylko własny panel: obszar, terminarz, stawki i swoje zlecenia.</p>`,
   {onOk:v=>nact(async()=>{
     const row={full_name:v.name.trim(),color:v.color,city:v.city.trim(),status:v.status,phone:v.phone.trim(),email:v.email.trim(),rating:v.rating===''?null:+v.rating,user_id:v.user||null};
     const nid=id?(chk(await sb.from('nurses').update(row).eq('id',id)),id):chk(await sb.from('nurses').insert(row).select().single()).id;
