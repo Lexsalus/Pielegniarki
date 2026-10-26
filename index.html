@@ -190,12 +190,12 @@ tr.click{cursor:pointer}tr.click:hover td{background:var(--card2)}
 .lng{display:flex;align-items:center;gap:5px;border:0;background:none;color:var(--mut);font:inherit;font-size:.74rem;font-weight:700;padding:5px 7px;border-radius:8px;cursor:pointer}
 .lng svg{width:20px;height:13px;border-radius:2px;box-shadow:0 0 0 1px rgba(127,127,127,.35);flex:none}
 .lng:hover{color:var(--txt)}.lng.on{background:var(--card2);color:var(--txt)}
-.lgtop{position:fixed;top:14px;right:16px;z-index:5}
+.lgtop{position:fixed;top:14px;right:16px;z-index:5;display:flex;gap:8px;align-items:center}
 @media(max-width:760px){.lng span{display:none}}
 </style>
 </head>
 <body>
-<div id="login"><div class="langsw-slot lgtop"></div><div class="lbox"></div></div>
+<div id="login"><div class="lgtop"><div class="langsw-slot"></div><button class="icon-btn themebtn" type="button" data-tip="Motyw jasny / ciemny">🌓</button></div><div class="lbox"></div></div>
 <div id="app">
   <aside id="side"></aside>
   <main>
@@ -204,7 +204,7 @@ tr.click{cursor:pointer}tr.click:hover td{background:var(--card2)}
       <div class="me">
         <div class="langsw-slot"></div>
         <div style="position:relative"><button class="icon-btn" id="bell" data-tip="Powiadomienia: propozycje zleceń, zlecenia dla dyspozytora, zmiany do zatwierdzenia">🔔</button><div class="sres" id="ntBox" style="right:0;left:auto;width:min(380px,90vw);max-height:70vh;overflow:auto;top:44px"></div></div>
-        <button class="icon-btn" id="theme" data-tip="Motyw jasny / ciemny">🌓</button>
+        <button class="icon-btn themebtn" id="theme" data-tip="Motyw jasny / ciemny">🌓</button>
         <div id="meBox" style="display:flex;gap:10px;align-items:center"></div>
         <button class="btn sm" id="logout">Wyloguj</button>
       </div>
@@ -260,7 +260,7 @@ addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
 const askReason=(title,label,cb,{ok='Potwierdź',danger=true,extra=''}={})=>modal(title,`${extra}<label class="fl">${esc(label)}<textarea class="f" name="reason" required minlength="5" placeholder="Wymagane — zapisze się w dzienniku audytu"></textarea></label>`,{ok,danger,onOk:f=>cb(f.reason.trim(),f)});
 
 const th=store.get('theme');if(th)document.documentElement.dataset.theme=th;
-$('#theme').onclick=()=>{const v=document.documentElement.dataset.theme==='light'?'dark':'light';document.documentElement.dataset.theme=v;store.set('theme',v)};
+document.addEventListener('click',e=>{if(!e.target.closest?.('.themebtn'))return;const v=document.documentElement.dataset.theme==='light'?'dark':'light';document.documentElement.dataset.theme=v;store.set('theme',v)});
 
 
 

@@ -8,7 +8,7 @@ Panel administratora według projektu „Zakładka Pielęgniarki” (23.10.2026)
 
 ```
 index.html          powłoka: logowanie (e-mail + hasło, 2FA), uprawnienia, menu
-i18n.js             tłumaczenie interfejsu: polski / ukraiński / angielski (flagi w górnym pasku; wybór zapamiętany w przeglądarce)
+i18n.js             tłumaczenie interfejsu: polski / ukraiński / angielski (flagi w górnym pasku i na ekranie logowania; wybór zapamiętany w przeglądarce)
 pielegniarki.js     cała zakładka: lista, mapa, karta, przydział, zlecenia, dostępność, oczekujący, ustawienia, panel pielęgniarki
 supabase/           schema.sql (użytkownicy, role, audyt, powiadomienia) + migrations/002–005; test/ — reguły bazy i test przez interfejs
 ```
@@ -40,7 +40,7 @@ Pielęgniarka widzi tylko siebie i własne zlecenia (bez ceny dla klienta i mar�
 
 ## Testy
 
-`supabase/test/` — opis w `supabase/test/e2e/README.md`. Wynik 26.10.2026: reguły bazy 137/137, interfejs 63/63.
+`supabase/test/` — opis w `supabase/test/e2e/README.md`. Wynik 26.10.2026: reguły bazy 137/137, interfejs 65/65.
 
 ## Rozstrzygnięcia tam, gdzie projekt milczy (do potwierdzenia albo zmiany)
 
