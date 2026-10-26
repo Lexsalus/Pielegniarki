@@ -214,7 +214,7 @@ async function roadKm(lat,lng,ids){
    ===================================================================== */
 const NZ_TABS=[['','Widok główny','Lista pielęgniarek, mapa obszarów i przydział zleceń w wybranym mieście.'],['zlecenia','Zlecenia','Wszystkie zlecenia i ich statusy. Licznik = zlecenia czekające na dyspozytora.'],['dostepnosc','Dostępność w mieście','Zbiorczo: ile pielęgniarek ma wolny termin w danym dniu i godzinie.'],['oczekujacy','Lista oczekujących','Klienci, dla których nie było wolnego terminu ani pielęgniarki w obszarze.'],['ustawienia','Ustawienia','Mapa, odległości, limity, cenniki stref, usługi, granice dzielnic i konta.']];
 const NZ_NTABS=[['','Moje zlecenia','Propozycje do przyjęcia (z limitem czasu) i zaplanowane wizyty.'],['obszar','Mój obszar','Obszar pracy. Zmiany czekają na zatwierdzenie Administratora.'],['terminarz','Dostępność','Tygodniowy wzorzec godzin i wyjątki (np. urlop). Zmiany czekają na zatwierdzenie.'],['stawki','Stawki','Wypłata za dojazd w poszczególnych strefach odległości.']];
-const setTop=h=>{const t=$('#nzTop');if(t)t.innerHTML=h};
+const setTop=h=>setTopHtml(h);
 ROUTES.pielegniarki=(sub='',id)=>{
   setTop('');
   need(can('nurses'),'Zakładka Pielęgniarki wymaga uprawnienia „Pielęgniarki”.');
@@ -827,7 +827,7 @@ ROUTES.podglad.after=async(key,sub='')=>{
   NZ.D={...A,nurses:n?[n]:[],links:f('links'),docs:[],areas:f('areas'),patterns:f('patterns'),exceptions:f('exceptions'),zones:[],rules:[],pool:[],orders:[],attempts:[],waitlist:[],me:n,myOrders:P.orders||[],myRates:P.rates||[]};
   NZ.pv={role:'nurse'};
   box.innerHTML=nurseView(sub);
-  const t=$('#nzTop');if(t)t.innerHTML=t.innerHTML.replace(/#\/pielegniarki(\/?)/g,(m,sl)=>`#/podglad/${key}${sl}`);
+  setTopHtml(TOPHTML.replace(/#\/pielegniarki(\/?)/g,(m,sl)=>`#/podglad/${key}${sl}`));
   clearInterval(NZ.timer);NZ.timer=setInterval(tickCountdowns,1000);tickCountdowns();
   if(sub==='obszar')mountEditor();
 };

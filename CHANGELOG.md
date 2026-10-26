@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.4.0] — 2026-10-26
+- Wygląd na telefonie: nic nie wychodzi poza ekran, w pionie lewy pasek jako pasek u góry, w poziomie lewy pasek i zakładki zawsze widoczne (zakładki w lewym pasku), zwijany wybór języka, ikona wylogowania, karty pielęgniarki z zakładkami w dwóch rzędach
+
 ## [1.3.2] — 2026-10-26
 - Paski przewijania w stylu panelu (jasny i ciemny motyw)
 

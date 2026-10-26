@@ -727,6 +727,9 @@ function i18nSwitcher(){return `<div class="langsw" role="group" aria-label="Ję
 function i18nPaint(){document.querySelectorAll('.langsw-slot').forEach(s=>s.innerHTML=i18nSwitcher())}
 function setLang(l){if(!I18N_NAMES[l]||l===LANG)return;LANG=l;try{localStorage.setItem('lang',l)}catch(e){}
   document.documentElement.lang=l;i18nPaint();if(typeof rerender==='function'&&typeof ME!=='undefined'&&ME){renderShell?.();rerender()}i18nWalk(document.body)}
-document.addEventListener('click',e=>{const b=e.target.closest?.('.langsw [data-lang]');if(b)setLang(b.dataset.lang)});
+document.addEventListener('click',e=>{const b=e.target.closest?.('.langsw [data-lang]');
+  if(!b){document.querySelectorAll('.langsw.open').forEach(x=>x.classList.remove('open'));return}
+  const sw=b.closest('.langsw');if(b.dataset.lang===LANG){sw.classList.toggle('open');return}   // zwinięty przełącznik (telefon): rozwiń
+  setLang(b.dataset.lang)});
 addEventListener('DOMContentLoaded',()=>{document.documentElement.lang=LANG;i18nPaint();i18nWalk(document.body);
   i18nObs.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:I18N_ATTR})});

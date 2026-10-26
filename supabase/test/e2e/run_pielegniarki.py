@@ -258,10 +258,13 @@ async def main():
         await pg.set_viewport_size({'width':w,'height':h})
         for hsh in ['#/pielegniarki','#/pielegniarki/zlecenia','#/pielegniarki/ustawienia','#/aktywni','#/podglad']:
           await nav(hsh,500); bb=await pg.locator('#chatFab').bounding_box()
+          sw_=await pg.evaluate('document.documentElement.scrollWidth-innerWidth')
+          if sw_>1: okk=False; print('OVERFLOW',w,h,hsh,sw_)
+          if w==844 and hsh.startswith('#/pielegniarki') and not await pg.is_visible('#sideTabs'): okk=False; print('SIDETABS',hsh)
           if not bb or not (w-bb['x']-bb['width']<=24 and h-bb['y']-bb['height']<=24 and bb['x']>0 and bb['y']>0): okk=False; print('FAB',w,h,hsh,bb)
         if w==844: await pg.click('#chatFab'); await pg.wait_for_timeout(500); bx=await pg.locator('#chatBox').bounding_box(); okk=okk and bx['y']>=0 and bx['y']+bx['height']<=h; await pg.screenshot(path=HERE+'czat_poziomo.png'); await pg.click('#chatFab')
         if w==390: await pg.click('#chatFab'); await pg.wait_for_timeout(500); bx=await pg.locator('#chatBox').bounding_box(); okk=okk and bx['x']>=0 and bx['x']+bx['width']<=w; await pg.screenshot(path=HERE+'czat_pionowo.png'); await pg.click('#chatFab')
-      ok(okk,'Czat: dymek w prawym dolnym rogu na każdej zakładce, telefon pionowo i poziomo')
+      ok(okk,'Telefon (pion / poziom): dymek czatu w rogu, nic nie wychodzi poza ekran, w poziomie zakładki w lewym pasku')
     if 'index.html' in U:   # --- powiadomienie o nowej wersji
       await pg.set_viewport_size({'width':1440,'height':950}); await nav('#/pielegniarki',600)
       VER_OVR.update({'version':'9.9.0','notes':'Testowa zmiana','relogin':False}); await pg.evaluate('verCheck()'); await pg.wait_for_timeout(400)

@@ -236,6 +236,45 @@ tr.click{cursor:pointer}tr.click:hover td{background:var(--card2)}
 ::-webkit-scrollbar-corner{background:transparent}
 .nztop::-webkit-scrollbar,#chatBox ::-webkit-scrollbar,.tabs::-webkit-scrollbar{height:6px;width:6px}
 @supports (-moz-appearance:none){*{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--mut) 45%,transparent) transparent}}
+
+/* ===== telefon i wąskie ekrany ===== */
+.sidetabs{display:none;flex-direction:column;gap:1px;margin:2px 0 6px 14px;padding-left:8px;border-left:2px solid var(--line)}
+.sidetabs .tab{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;border:0;font-size:.84rem;color:var(--mut);white-space:normal;line-height:1.25}
+.sidetabs .tab.on{background:var(--card2);color:var(--txt)}.sidetabs .tab:hover{color:var(--txt)}
+.lgi svg{display:block}
+@media(max-width:900px),(orientation:landscape) and (max-height:520px){
+  .top .langsw:not(.open) .lng:not(.on){display:none}   /* język: widać tylko aktywną flagę — dotknięcie rozwija wybór */
+  .content{padding-bottom:96px}
+}
+.grid>*,.nzmain>*{min-width:0}
+#nzcard .tabs{flex-wrap:wrap;overflow:visible;row-gap:2px}
+.lgi{display:none}
+select.f{text-overflow:ellipsis}
+.form{grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr))}
+.nzmain .card [style*="grid-template-columns:1fr 1fr 1fr"]{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+@media(max-width:1100px){.mename{display:none}.me{gap:8px}}
+@media(max-width:760px){
+  .content .grid[style*="grid-template-columns"]{grid-template-columns:1fr!important}
+  aside{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;align-items:center;gap:6px;padding:8px 10px;border-right:0;border-bottom:1px solid var(--line)}
+  .brand{width:auto;padding:4px 6px;flex:none}.brand .ver{display:none}
+  aside .nav{width:auto;flex:none;white-space:nowrap;padding:7px 10px}
+  .me{gap:6px;flex-wrap:nowrap;margin-left:0;width:100%;justify-content:flex-end}
+  .lgi{display:inline}.lgt{display:none}#logout{padding:6px 10px}
+  .lang-sw,.langsw{flex:none}.lng{padding:5px}
+  .ph h1{font-size:1.35rem}.ph>div{min-width:0}
+}
+/* telefon w poziomie: lewy pasek i górny pasek zawsze widoczne */
+@media(orientation:landscape) and (max-height:520px){
+  #app{grid-template-columns:180px 1fr}
+  .nztop{display:none}.sidetabs{display:flex}
+  aside{position:sticky;top:0;height:100vh;height:100dvh;flex-direction:column;flex-wrap:nowrap;overflow:auto;padding:10px 8px;border-right:1px solid var(--line);border-bottom:0;align-items:stretch}
+  .brand{width:100%;padding:2px 6px 10px;font-size:.92rem}.brand .ver{display:none}
+  aside .nav{width:100%;padding:7px 9px;font-size:.88rem}
+  .top{flex-wrap:nowrap;padding:6px 12px;gap:8px}.nztop{order:0;flex-basis:auto}
+  .nztop .tab{padding:8px 10px;font-size:.88rem}
+  .me{width:auto;margin-left:auto;gap:6px}.mename{display:none}.lgi{display:inline}.lgt{display:none}.lng span{display:none}.lng{padding:5px}
+  .content{padding:12px 14px 60px}
+}
 </style>
 </head>
 <body>
@@ -251,7 +290,7 @@ tr.click{cursor:pointer}tr.click:hover td{background:var(--card2)}
         <button class="icon-btn themebtn" id="theme" data-tip="Motyw jasny / ciemny">🌓</button>
         <div style="position:relative"><button class="icon-btn" id="bell" data-tip="Powiadomienia: propozycje zleceń, zlecenia dla dyspozytora, zmiany do zatwierdzenia">🔔</button><div class="sres" id="ntBox" style="right:0;left:auto;width:min(380px,90vw);max-height:70vh;overflow:auto;top:44px"></div></div>
         <div id="meBox" style="display:flex;gap:10px;align-items:center"></div>
-        <button class="btn sm" id="logout">Wyloguj</button>
+        <button class="btn sm" id="logout" data-tip="Wyloguj"><span class="lgi"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span><span class="lgt">Wyloguj</span></button>
       </div>
     </div>
     <div class="content" id="view"></div>
@@ -363,20 +402,23 @@ async function verRelogin(){clearInterval(UPD.timer);try{await $('#logout').oncl
 verCheck();setInterval(()=>{if(document.visibilityState==='visible')verCheck()},180000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')verCheck()});
 
+/* zakładki widoku: w górnym pasku, a w telefonie w poziomie — w lewym pasku (zawsze widoczne) */
+let TOPHTML='';
+function setTopHtml(h){TOPHTML=h;const t=$('#nzTop');if(t)t.innerHTML=h;const s=$('#sideTabs');if(s)s.innerHTML=h}
 /* --- menu i router --- */
 function renderShell(){
   const cnt=typeof nzBadge==='function'?nzBadge():0;
   const pg=location.hash.split('/')[1]||'pielegniarki';
-  $('#side').innerHTML=`<div class="brand"><i>🩺</i>Pielęgniarki${APP_VER?`<span class="ver" data-notr data-tip="Wersja panelu — lista zmian w CHANGELOG.md">v${esc(APP_VER)}</span>`:''}</div><a class="nav ${pg==='pielegniarki'?'on':''}" href="#/pielegniarki">🩺 Pielęgniarki${cnt?`<span class="cnt">${cnt}</span>`:''}</a>${ME.role==='admin'?`<a class="nav ${pg==='aktywni'?'on':''}" href="#/aktywni" data-tip="Kto jest teraz zalogowany (otwarty panel w ciągu ostatnich 2 minut).">🟢 Aktywni</a><a class="nav ${pg==='podglad'?'on':''}" href="#/podglad" data-tip="Panel oczami wybranej roli lub osoby — tylko do odczytu.">👁 Podgląd</a>`:''}<div class="sp"></div>`;
+  $('#side').innerHTML=`<div class="brand"><i>🩺</i>Pielęgniarki${APP_VER?`<span class="ver" data-notr data-tip="Wersja panelu — lista zmian w CHANGELOG.md">v${esc(APP_VER)}</span>`:''}</div><a class="nav ${pg==='pielegniarki'?'on':''}" href="#/pielegniarki">🩺 Pielęgniarki${cnt?`<span class="cnt">${cnt}</span>`:''}</a><nav class="sidetabs" id="sideTabs">${TOPHTML}</nav>${ME.role==='admin'?`<a class="nav ${pg==='aktywni'?'on':''}" href="#/aktywni" data-tip="Kto jest teraz zalogowany (otwarty panel w ciągu ostatnich 2 minut).">🟢 Aktywni</a><a class="nav ${pg==='podglad'?'on':''}" href="#/podglad" data-tip="Panel oczami wybranej roli lub osoby — tylko do odczytu.">👁 Podgląd</a>`:''}<div class="sp"></div>`;
   const un=(DB.notifs||[]).filter(n=>!n.read_at).length;$('#bell').innerHTML='🔔'+(un?`<span class="dot">${un}</span>`:'');
-  $('#meBox').innerHTML=`<span class="av" style="background:${esc(ME.color||'#7c5cff')}">${esc(initials(ME.name||'?'))}</span><div><b>${esc(ME.name)}</b><small>${esc(ROLES[ME.role]||'')}</small></div>`;
+  $('#meBox').innerHTML=`<span class="av" style="background:${esc(ME.color||'#7c5cff')}" data-tip="${esc(ME.name)}">${esc(initials(ME.name||'?'))}</span><div class="mename"><b>${esc(ME.name)}</b><small>${esc(ROLES[ME.role]||'')}</small></div>`;
 }
 const ROUTES={};
 function route(){
   if(!ME)return;renderShell();
   const [,page='pielegniarki',a,b]=location.hash.split('/');
   const V=$('#view');window.scrollTo(0,0);
-  const tb=$('#nzTop');if(tb)tb.innerHTML='';
+  setTopHtml('');
   if(page!=='podglad'&&typeof nzLeavePreview==='function')nzLeavePreview();
   try{const fn=ROUTES[page];if(!fn)throw new Forbidden('Nie ma takiej strony');V.innerHTML=fn(a,b)||'';ROUTES[page].after?.(a,b)}
   catch(e){if(e.code===403)V.innerHTML=`<div class="forbid"><b>403</b><h2>Brak dostępu</h2><p class="mut" style="margin:8px 0 18px">${esc(e.message)}</p><a class="btn" href="#/pielegniarki">← Wróć</a></div>`;else{console.error(e);V.innerHTML=`<div class="empty">Błąd: ${esc(e.message)}</div>`}}

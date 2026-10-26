@@ -1,6 +1,6 @@
 {
-  "version": "1.3.2",
+  "version": "1.4.0",
   "date": "2026-10-26",
-  "notes": "Paski przewijania w stylu panelu (jasny i ciemny motyw)",
+  "notes": "Wygląd na telefonie: nic nie wychodzi poza ekran, w pionie lewy pasek jako pasek u góry, w poziomie lewy pasek i zakładki zawsze widoczne (zakładki w lewym pasku), zwijany wybór języka, ikona wylogowania, karty pielęgniarki z zakładkami w dwóch rzędach",
   "relogin": false
 }
