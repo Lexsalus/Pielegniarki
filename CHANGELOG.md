@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.8.1] — 2026-10-26
+- Logi: kolumna „Wersja” przy każdym wpisie i lista wersji, na których pracowała osoba
+
 ## [1.8.0] — 2026-10-26
 - Ikonka urządzenia przy osobie (📱 telefon / 💻 komputer, z opisem przeglądarki i informacją o aplikacji) w „Aktywni” i komunikatorze (migracja 012)
 

@@ -1,6 +1,6 @@
 {
-  "version": "1.8.0",
+  "version": "1.8.1",
   "date": "2026-10-26",
-  "notes": "Ikonka urządzenia przy osobie (📱 telefon / 💻 komputer, z opisem przeglądarki i informacją o aplikacji) w „Aktywni” i komunikatorze (migracja 012)",
+  "notes": "Logi: kolumna „Wersja” przy każdym wpisie i lista wersji, na których pracowała osoba",
   "relogin": false
 }

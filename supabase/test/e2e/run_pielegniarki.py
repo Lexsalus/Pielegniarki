@@ -299,7 +299,7 @@ async def main():
       await pg.evaluate("logAdd('info','test'); logFlush()"); await pg.wait_for_timeout(800)
       await login('admin@k.test'); await nav('#/aktywni',1200)
       await pg.locator('tr',has_text='nowak@k.test').locator('button',has_text='📋').click(); await pg.wait_for_timeout(1200)
-      lt=await T('#mbox'); ok('Prośba o odświeżenie → Nie, później' in lt and '#/pielegniarki' in lt,'Logi: Administrator widzi kliknięcia i widoki pielęgniarki')
+      lt=await T('#mbox'); ok('Prośba o odświeżenie → Nie, później' in lt and '#/pielegniarki' in lt and 'Wersja' in lt and 'wersje: v' in lt,'Logi: Administrator widzi kliknięcia i widoki pielęgniarki')
       allv=json.dumps(sql("select label,detail from public.user_logs"),ensure_ascii=False)
       ok('Oddzwonię' not in allv and 'Klient nie otwiera' not in allv and 'Haslo-testowe' not in allv,'Logi: bez treści czatu i haseł')
       await pg.click('#lgE'); await pg.wait_for_timeout(800); ok('Brak wpisów' in await T('#lgBox') or 'Błąd' in await T('#lgBox'),'Logi: filtr „tylko błędy”')

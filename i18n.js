@@ -146,6 +146,7 @@ const I18N_ROWS=[
 ['Czas','Час','Time'],['Rodzaj','Вид','Type'],['Co','Що','What'],['Widok','Вигляд','View'],['Szczegóły','Деталі','Details'],['Kliknięcie','Натискання','Click'],['Info','Інфо','Info'],
 ['{n} wpisów','{n} записів','{n} entries'],['{n} błędów','{n} помилок','{n} errors'],['najnowsze na górze','найновіші вгорі','newest first'],['Brak wpisów w tym okresie','Немає записів за цей період','No entries in this period'],
 ['Telefon','Телефон','Phone'],['Tablet','Планшет','Tablet'],['Komputer','Комп’ютер','Computer'],
+['Wersja','Версія','Version'],['wersje:','версії:','versions:'],
 // --- role
 ['Administrator','Адміністратор','Administrator'],
 ['Pełnomocnik','Повірений','Attorney'],
