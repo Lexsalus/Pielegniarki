@@ -231,6 +231,16 @@ async def main():
       await pg.click('#chatBox .chi:has-text("Anna Nowak")'); await pg.wait_for_timeout(900)
       ok(await pg.locator('#chMsgs .msg.me .ck.rd').count()==1 and 'Oddzwonię' in await T('#chMsgs'),'Czat: potwierdzenie odczytu ✓✓ i odpowiedź')
       await nav('#/pielegniarki/zlecenia',900); ok(await pg.locator('#view button:has-text("💬")').count()>=1,'Lista zleceń: przycisk wątku 💬')
+    if 'index.html' in U:   # --- dymek czatu: zawsze w prawym dolnym rogu (zakładki, telefon pionowo / poziomo)
+      okk=True; await pg.evaluate('chatClose()')
+      for w,h in [(390,844),(844,390),(1440,950)]:
+        await pg.set_viewport_size({'width':w,'height':h})
+        for hsh in ['#/pielegniarki','#/pielegniarki/zlecenia','#/pielegniarki/ustawienia','#/aktywni','#/podglad']:
+          await nav(hsh,500); bb=await pg.locator('#chatFab').bounding_box()
+          if not bb or not (w-bb['x']-bb['width']<=24 and h-bb['y']-bb['height']<=24 and bb['x']>0 and bb['y']>0): okk=False; print('FAB',w,h,hsh,bb)
+        if w==844: await pg.click('#chatFab'); await pg.wait_for_timeout(500); bx=await pg.locator('#chatBox').bounding_box(); okk=okk and bx['y']>=0 and bx['y']+bx['height']<=h; await pg.screenshot(path=HERE+'czat_poziomo.png'); await pg.click('#chatFab')
+        if w==390: await pg.click('#chatFab'); await pg.wait_for_timeout(500); bx=await pg.locator('#chatBox').bounding_box(); okk=okk and bx['x']>=0 and bx['x']+bx['width']<=w; await pg.screenshot(path=HERE+'czat_pionowo.png'); await pg.click('#chatFab')
+      ok(okk,'Czat: dymek w prawym dolnym rogu na każdej zakładce, telefon pionowo i poziomo')
     if os.environ.get('COLLECT'): json.dump(sorted(COL),open(os.environ['COLLECT'],'w'),ensure_ascii=False,indent=0)
     print('ERR',[e for e in errs if 'favicon' not in e]); print(f'WYNIK: {sum(res)}/{len(res)}')
     await b.close()

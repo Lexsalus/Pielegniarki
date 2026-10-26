@@ -99,6 +99,12 @@ const I18N_ROWS=[
 ['Nie możesz pisać do tej osoby','Ви не можете писати цій особі','You cannot message this person'],
 ['Brak dostępu do wątku tego zlecenia','Немає доступу до гілки цього замовлення','No access to this order thread'],
 ['Wybierz rozmowę','Виберіть розмову','Choose a conversation'],
+['Wysłano {n}.{n}.{n} {n}:{n}','Надіслано {n}.{n}.{n} {n}:{n}','Sent {n}.{n}.{n} {n}:{n}'],
+['Odebrano {n}.{n}.{n} {n}:{n}','Отримано {n}.{n}.{n} {n}:{n}','Received {n}.{n}.{n} {n}:{n}'],
+['Doręczono {n}.{n}.{n} {n}:{n}','Доставлено {n}.{n}.{n} {n}:{n}','Delivered {n}.{n}.{n} {n}:{n}'],
+['Przeczytano {n}.{n}.{n} {n}:{n}','Прочитано {n}.{n}.{n} {n}:{n}','Read {n}.{n}.{n} {n}:{n}'],
+['Czeka na doręczenie','Очікує доставки','Awaiting delivery'],
+['Przeczytali:','Прочитали:','Read by:'],
 // --- role
 ['Administrator','Адміністратор','Administrator'],
 ['Pełnomocnik','Повірений','Attorney'],

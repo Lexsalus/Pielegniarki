@@ -173,7 +173,7 @@ tr.click{cursor:pointer}tr.click:hover td{background:var(--card2)}
 .mbox.wide{max-width:900px}
 .mhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px}
 .mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
-.toast{position:fixed;bottom:20px;right:20px;background:var(--card2);border:1px solid var(--accent);padding:12px 16px;border-radius:12px;opacity:0;transform:translateY(10px);transition:.3s;pointer-events:none;z-index:200;max-width:380px}
+.toast{position:fixed;bottom:86px;right:20px;background:var(--card2);border:1px solid var(--accent);padding:12px 16px;border-radius:12px;opacity:0;transform:translateY(10px);transition:.3s;pointer-events:none;z-index:200;max-width:380px}
 .toast.show{opacity:1;transform:none}
 .toast.err{border-color:var(--bad)}
 .forbid{text-align:center;padding:60px 20px}
@@ -203,8 +203,10 @@ tr.click{cursor:pointer}tr.click:hover td{background:var(--card2)}
 .me .pwalbl{display:none}
 #chatFab{position:fixed;right:20px;bottom:20px;z-index:60;width:54px;height:54px;border-radius:50%;border:0;background:var(--accent);color:#fff;font-size:1.45rem;cursor:pointer;box-shadow:0 8px 24px -6px rgba(124,92,255,.6);display:flex;align-items:center;justify-content:center}
 #chatFab[hidden]{display:none}#chatFab .dot{position:absolute;top:-2px;right:-2px;background:var(--bad);color:#fff;border-radius:20px;font-size:.7rem;font-weight:800;padding:2px 6px;min-width:20px}#chatFab .dot[hidden]{display:none}
-#chatBox{position:fixed;right:20px;bottom:86px;z-index:61;width:min(380px,calc(100vw - 32px));height:min(540px,calc(100vh - 120px));background:var(--bg2);border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh);display:none;flex-direction:column;overflow:hidden}
+#chatBox{position:fixed;right:20px;bottom:86px;z-index:61;width:min(380px,calc(100vw - 32px));height:min(540px,calc(100vh - 120px));height:min(540px,calc(100dvh - 120px));background:var(--bg2);border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh);display:none;flex-direction:column;overflow:hidden}
 #chatBox.show{display:flex}
+@media(max-width:600px){#chatFab{right:14px;bottom:14px}#chatBox{left:8px;right:8px;width:auto;bottom:78px;height:calc(100vh - 96px);height:calc(100dvh - 96px)}.toast{bottom:78px;right:8px;left:8px;max-width:none}}
+@media(max-height:520px){#chatFab{right:14px;bottom:14px}#chatBox{bottom:10px;right:80px;height:calc(100vh - 20px);height:calc(100dvh - 20px)}.toast{bottom:14px;right:80px}}
 .chh{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}.chh b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.chh small{font-weight:500;font-size:.75rem}
 .chl{overflow:auto;flex:1;padding:6px}.chsec{font-size:.7rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);padding:10px 8px 4px}
 .chi{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:8px;border-radius:10px;cursor:pointer;text-align:left;color:var(--txt)}.chi:hover{background:var(--card)}
@@ -215,7 +217,7 @@ tr.click{cursor:pointer}tr.click:hover td{background:var(--card2)}
 .chm{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
 .msg{max-width:82%;display:flex;flex-direction:column;align-items:flex-start}.msg.me{align-self:flex-end;align-items:flex-end}
 .msg .bub{background:var(--card2);padding:8px 11px;border-radius:14px 14px 14px 4px;white-space:normal;word-break:break-word}.msg.me .bub{background:var(--accent);color:#fff;border-radius:14px 14px 4px 14px}
-.msg .meta{color:var(--mut);font-size:.7rem;margin-top:2px}.msg .who{color:var(--mut);font-size:.72rem;margin-bottom:2px}
+.msg .meta{color:var(--mut);font-size:.7rem;margin-top:2px;display:flex;flex-wrap:wrap;gap:2px 8px;justify-content:flex-start}.msg.me .meta{justify-content:flex-end}.msg .who{color:var(--mut);font-size:.72rem;margin-bottom:2px}
 .ck{letter-spacing:-2px;margin-left:3px}.ck.rd{color:var(--info);font-weight:800}
 .chf{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}.chf textarea{flex:1;resize:none;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-height:42px;max-height:120px}
 .ver{font-size:.7rem;font-weight:700;color:var(--mut);background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:1px 7px;vertical-align:middle;margin-left:4px}

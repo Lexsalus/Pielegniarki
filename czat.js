@@ -33,11 +33,14 @@ async function chatLoad(){
     (DB.notifs||[]).forEach(n=>{if(n.link===(CH.view==='dm'?'czat:u:'+CH.with:'czat:o:'+CH.order)&&!n.read_at)n.read_at=new Date().toISOString()});
     chatBadge();renderShell()}
 }
-function chatTick(m){
-  if(m.sender_id!==ME.id)return '';
+const chatDT=v=>{const d=new Date(v);return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()} ${d.getHours()}:${pad(d.getMinutes())}`};
+/* pod wiadomością: data i godzina wysłania oraz doręczenia / odczytu */
+function chatMeta(m){
+  const sent=`<span>Wysłano ${chatDT(m.created_at)}</span>`;
+  if(m.sender_id!==ME.id)return sent+(m.delivered_at&&!m.order_id?`<span>Odebrano ${chatDT(m.delivered_at)}</span>`:'');
   if(m.order_id){const rs=CH.readers.filter(r=>r.user_id!==ME.id&&new Date(r.last_read_at)>=new Date(m.created_at));
-    return rs.length?`<span class="ck rd" data-tip="Przeczytane: ${esc(rs.map(r=>r.full_name).join(', '))}">✓✓</span>`:`<span class="ck" data-tip="Wysłane">✓</span>`}
-  return m.read_at?`<span class="ck rd" data-tip="Przeczytane ${esc(chatTime(m.read_at))}">✓✓</span>`:m.delivered_at?`<span class="ck" data-tip="Doręczone ${esc(chatTime(m.delivered_at))}">✓✓</span>`:`<span class="ck" data-tip="Wysłane">✓</span>`}
+    return sent+(rs.length?`<span class="ck rd">✓✓</span><span>Przeczytali: ${esc(rs.map(r=>r.full_name).join(', '))}</span>`:`<span class="ck">✓</span>`)}
+  return sent+(m.read_at?`<span class="ck rd">✓✓</span><span>Przeczytano ${chatDT(m.read_at)}</span>`:m.delivered_at?`<span class="ck">✓✓</span><span>Doręczono ${chatDT(m.delivered_at)}</span>`:`<span class="ck">✓</span><span>Czeka na doręczenie</span>`)}
 function chatDraw(){
   const B=$('#chatBox');B.classList.toggle('show',CH.open);if(!CH.open)return;
   const head=(t,back)=>`<div class="chh">${back?`<button class="icon-btn" type="button" onclick="chatList()" aria-label="Wróć">←</button>`:''}<b>${t}</b><button class="icon-btn" type="button" onclick="chatClose()" aria-label="Zamknij">✕</button></div>`;
@@ -48,7 +51,7 @@ function chatDraw(){
   const title=CH.view==='dm'?esc(chatName(CH.with)):`Zlecenie #${CH.num}`;
   const on=CH.view==='dm'&&(CH.state?.contacts||[]).find(c=>c.user_id===CH.with)?.online;
   B.innerHTML=head(title+(CH.view==='dm'?` <small class="mut">${on?'● zalogowana':'niezalogowana'}</small>`:''),true)+
-    `<div class="chm" id="chMsgs">${CH.msgs.map(m=>`<div class="msg ${m.sender_id===ME.id?'me':''}">${CH.view==='order'&&m.sender_id!==ME.id?`<small class="who">${esc(chatName(m.sender_id))}</small>`:''}<div class="bub">${esc(m.body).replace(/\n/g,'<br>')}</div><small class="meta">${chatTime(m.created_at)} ${chatTick(m)}</small></div>`).join('')||'<div class="empty small">Brak wiadomości — napisz pierwszą.</div>'}</div>
+    `<div class="chm" id="chMsgs">${CH.msgs.map(m=>`<div class="msg ${m.sender_id===ME.id?'me':''}">${CH.view==='order'&&m.sender_id!==ME.id?`<small class="who">${esc(chatName(m.sender_id))}</small>`:''}<div class="bub">${esc(m.body).replace(/\n/g,'<br>')}</div><small class="meta">${chatMeta(m)}</small></div>`).join('')||'<div class="empty small">Brak wiadomości — napisz pierwszą.</div>'}</div>
     <form class="chf" onsubmit="event.preventDefault();chatSend()"><textarea id="chIn" rows="2" maxlength="4000" placeholder="Napisz wiadomość… (Enter — wyślij, Shift+Enter — nowa linia)"></textarea><button class="btn pri" type="submit">Wyślij</button></form>`;
   const M=$('#chMsgs');M.scrollTop=M.scrollHeight;const I=$('#chIn');
   I.value=CH.draft||'';I.oninput=()=>CH.draft=I.value;
