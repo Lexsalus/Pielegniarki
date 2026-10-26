@@ -20,7 +20,7 @@ const hm=m=>`${Math.floor(m/60)}:${pad(m%60)}`;
 const tmin=t=>{const [h,m]=String(t||'0:0').split(':').map(Number);return h*60+(m||0)};
 const monday=(off=0)=>{const d=today();d.setDate(d.getDate()-((d.getDay()+6)%7)+off*7);return d};
 const isoDow=d=>((d.getDay()+6)%7)+1;
-const fDay=d=>`${DOW[d.getDay()].slice(0,3)}. ${pad(d.getDate())}.${pad(d.getMonth()+1)}`;
+const fDay=d=>`${dowShort(d.getDay())} ${pad(d.getDate())}.${pad(d.getMonth()+1)}`;
 const fSlot=s=>{const d=new Date(s);return `${fDay(d)}, ${d.getHours()}:${pad(d.getMinutes())}`};
 const nAdmin=()=>permLevel('nurses')===2;
 const isNurse=()=>NZ.pv?NZ.pv.role==='nurse':ME?.role==='nurse';   // w podglądzie: rola oglądanej osoby
