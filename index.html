@@ -240,6 +240,7 @@ tr.click{cursor:pointer}tr.click:hover td{background:var(--card2)}
 @supports (-moz-appearance:none){*{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--mut) 45%,transparent) transparent}}
 
 /* ===== telefon i wąskie ekrany ===== */
+@media(max-width:1500px){.cmdl{display:none}}
 .sidetabs{display:none;flex-direction:column;gap:1px;margin:2px 0 6px 14px;padding-left:8px;border-left:2px solid var(--line)}
 .sidetabs .tab{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;border:0;font-size:.84rem;color:var(--mut);white-space:normal;line-height:1.25}
 .sidetabs .tab.on{background:var(--card2);color:var(--txt)}.sidetabs .tab:hover{color:var(--txt)}
@@ -417,6 +418,36 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 /* zakładki widoku: w górnym pasku, a w telefonie w poziomie — w lewym pasku (zawsze widoczne) */
 let TOPHTML='';
 function setTopHtml(h){TOPHTML=h;const t=$('#nzTop');if(t)t.innerHTML=h;const s=$('#sideTabs');if(s)s.innerHTML=h}
+
+/* --- polecenia Administratora: prośba o odświeżenie / wymuszone odświeżenie / wylogowanie --- */
+let AKROWS=[];
+const CMD={ask_reload:['🔄','Poproś o odświeżenie','Osoba zobaczy pytanie, czy odświeżyć panel (Tak / Nie).'],
+  force_reload:['⚡','Wymuś odświeżenie','Panel odświeży się sam po 3 sekundach — wymaga potwierdzenia.'],
+  logout:['⏏','Wyloguj','Wylogowuje i unieważnia sesję (działa też na starej wersji panelu) — wymaga potwierdzenia.']};
+const cmdBtns=uid=>Object.entries(CMD).map(([k,[i,l,t]])=>`<button class="btn sm${k==='ask_reload'?'':' del'}" type="button" data-tip="${esc(l)}: ${esc(t)}" onclick="cmdSend(${uid},'${k}')">${i} <span class="cmdl">${esc(l)}</span></button>`).join(' ');
+async function cmdGo(uid,kind,name){const r=uid?await sb.rpc('client_command',{p_user:uid,p_kind:kind}):await sb.rpc('client_command_all',{p_kind:kind});
+  if(r.error)return toast(errMsg(r.error),true);toast(`${CMD[kind][1]}: wysłano (${uid?name:r.data+' os.'})`);akLoad()}
+function cmdSend(uid,kind){const name=uid?(AKROWS.find(r=>r.user_id===uid)?.full_name||AKROWS.find(r=>r.user_id===uid)?.email||''):'';
+  const who=uid?name:'wszystkich zalogowanych';
+  if(kind==='ask_reload')return cmdGo(uid,kind,name);
+  // dwa dodatkowe potwierdzenia, żeby nikomu przypadkiem nie przerwać pracy
+  modal(CMD[kind][1],`<div class="note warn" style="line-height:1.55">Czy na pewno chcesz ${kind==='logout'?'wylogować':'wymusić odświeżenie panelu u'} <b>${esc(who)}</b>?<br>To może przerwać komuś pracę (np. niezapisany formularz albo wpisaną wiadomość).</div>`,
+    {ok:'Tak, rozumiem',danger:true,onOk:()=>{modal(CMD[kind][1],`<div class="note warn">Ostatnie potwierdzenie: <b>${kind==='logout'?'wylogowanie':'wymuszone odświeżenie'}</b> — ${esc(who)}.</div>`,
+      {ok:kind==='logout'?'Wyloguj teraz':'Wymuś teraz',danger:true,onOk:()=>cmdGo(uid,kind,name)});return false}})}
+
+/* --- odbiór poleceń (każdy zalogowany): na żywo i przy co-minutowym sprawdzeniu --- */
+const CMDSEEN=new Set();let CMDRT=null;
+async function cmdPoll(){if(!ME)return;const r=await sb.rpc('my_commands');if(r.error||!r.data)return;
+  for(const c of r.data){if(CMDSEEN.has(c.id))continue;CMDSEEN.add(c.id);
+    if(c.kind==='ask_reload'){modal('Prośba o odświeżenie',`<p style="line-height:1.55">Administrator prosi o odświeżenie panelu (np. po aktualizacji). Odświeżyć teraz?</p>`,
+        {ok:'Tak, odśwież',cancel:'Nie, później',onOk:async()=>{await sb.rpc('command_done',{p_id:c.id,p_answer:'tak'});location.reload()}});
+      $$('#mbox [data-x]').forEach(b=>b.addEventListener('click',()=>sb.rpc('command_done',{p_id:c.id,p_answer:'nie'}),{once:true}))}
+    else if(c.kind==='force_reload'){await sb.rpc('command_done',{p_id:c.id,p_answer:'wykonano'});toast('Administrator odświeża panel…');setTimeout(()=>location.reload(),3000)}
+    else if(c.kind==='logout'){await sb.rpc('command_done',{p_id:c.id,p_answer:'wykonano'});try{await $('#logout').onclick()}catch(e){}setTimeout(()=>toast('Administrator wylogował Cię z panelu'),400)}}}
+function cmdStart(){if(CMDRT||typeof sb.channel!=='function'||!ME)return;
+  try{CMDRT=sb.channel('polecenia').on('postgres_changes',{event:'INSERT',schema:'public',table:'client_commands',filter:'target_user=eq.'+ME.id},()=>cmdPoll()).subscribe()}catch(e){}}
+function cmdStop(){if(CMDRT){try{sb.removeChannel(CMDRT)}catch(e){}CMDRT=null}}
+setInterval(()=>{if(ME)cmdPoll()},60000);
 /* --- menu i router --- */
 function renderShell(){
   const cnt=typeof nzBadge==='function'?nzBadge():0;
@@ -445,13 +476,13 @@ setInterval(()=>{if(ME)ping('ping')},60000);
 const dt=v=>v?new Date(v).toLocaleString(LOC(),{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
 const ago=v=>{if(!v)return '—';const m=Math.round((Date.now()-new Date(v))/60000);return m<1?'przed chwilą':m<60?m+' min temu':m<1440?Math.floor(m/60)+' godz. temu':dt(v)};
 ROUTES.aktywni=()=>{if(ME.role!=='admin')throw new Forbidden('Widok tylko dla Administratora');
-  return `<div class="ph"><div><h1>Aktywni <span class="mut" style="font-size:.95rem;font-weight:600" id="akSum"></span></h1></div><button class="btn" onclick="akLoad()">Odśwież</button></div><div class="card" id="akBox"><div class="empty">Wczytywanie…</div></div><p class="mut" style="font-size:.8rem;margin-top:8px">Aktywny teraz = otwarty panel, sygnał w ciągu ostatnich 2 minut. Lista odświeża się co minutę.</p>`};
+  return `<div class="ph"><div><h1>Aktywni <span class="mut" style="font-size:.95rem;font-weight:600" id="akSum"></span></h1></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="mut small">Do wszystkich:</span>${cmdBtns('null')}<button class="btn" onclick="akLoad()">Odśwież listę</button></div></div><div class="card" id="akBox"><div class="empty">Wczytywanie…</div></div><p class="mut" style="font-size:.8rem;margin-top:8px">Aktywny teraz = otwarty panel, sygnał w ciągu ostatnich 2 minut. Lista odświeża się co minutę.</p>`};
 ROUTES.aktywni.after=()=>akLoad();
 async function akLoad(){const box=$('#akBox');if(!box)return;
   const {data,error}=await sb.rpc('active_users');if(!$('#akBox'))return;
   if(error){box.innerHTML=`<div class="empty">Błąd: ${esc(errMsg(error))}</div>`;return}
-  const rows=data||[],on=rows.filter(r=>r.online).length;$('#akSum').textContent=`${on} teraz · ${rows.length} kont aktywnych`;
-  box.innerHTML=rows.length?`<div class="tw"><table><tr><th>Użytkownik</th><th>Rola</th><th>Status</th><th>Zalogowany od</th><th>Ostatnia aktywność</th></tr>${rows.map(r=>`<tr><td><b>${esc(r.full_name||r.email)}</b><br><small class="mut">${esc(r.email)}</small></td><td>${esc(ROLES[r.role]||r.role)}</td><td>${r.status==='busy'?'<span class="badge b-warn">● Zajęty</span>':r.online?'<span class="badge b-good">● Aktywny teraz</span>':r.logout_at?'<span class="badge">Wylogowany</span>':'<span class="badge">Nieaktywny</span>'}</td><td>${r.online?dt(r.login_at):'—'}</td><td>${r.logout_at?'wylogowanie '+ago(r.logout_at):ago(r.last_seen)}</td></tr>`).join('')}</table></div>`:'<div class="empty">Brak kont</div>'}
+  const rows=data||[];AKROWS=rows;const on=rows.filter(r=>r.online).length;$('#akSum').textContent=`${on} teraz · ${rows.length} kont aktywnych`;
+  box.innerHTML=rows.length?`<div class="tw"><table><tr><th>Użytkownik</th><th>Rola</th><th>Status</th><th>Zalogowany od</th><th>Ostatnia aktywność</th><th>Polecenia</th></tr>${rows.map(r=>`<tr><td><b>${esc(r.full_name||r.email)}</b><br><small class="mut">${esc(r.email)}</small></td><td>${esc(ROLES[r.role]||r.role)}</td><td>${r.status==='busy'?'<span class="badge b-warn">● Zajęty</span>':r.online?'<span class="badge b-good">● Aktywny teraz</span>':r.logout_at?'<span class="badge">Wylogowany</span>':'<span class="badge">Nieaktywny</span>'}</td><td>${r.online?dt(r.login_at):'—'}</td><td>${r.logout_at?'wylogowanie '+ago(r.logout_at):ago(r.last_seen)}</td><td style="white-space:nowrap">${r.user_id===ME.id?'<span class="mut small">to Ty</span>':cmdBtns("'"+r.user_id+"'")}</td></tr>`).join('')}</table></div>`:'<div class="empty">Brak kont</div>'}
 setInterval(()=>{if(ME&&location.hash.startsWith('#/aktywni')&&document.visibilityState==='visible')akLoad()},60000);
 
 /* =====================================================================
@@ -549,12 +580,12 @@ async function afterSignIn(){
   ME={id:p.id,name:p.full_name||p.email,role:p.role,email:p.email,color:p.color};
   try{await reload()}catch(e){console.error(e);return toast('Nie udało się wczytać danych: '+errMsg(e),true)}
   if(!sessionStorage.getItem('crm_logged_'+p.id)){sessionStorage.setItem('crm_logged_'+p.id,1);sb.rpc('log_login',{p_action:'logowanie'});ping('login')}else ping('ping');
-  $('#login').style.display='none';$('#app').style.display='grid';rlStart();RL.full=Date.now();RL.last=DB.notifs?.[0]?.created_at||null;
+  $('#login').style.display='none';$('#app').style.display='grid';rlStart();cmdStart();cmdPoll();RL.full=Date.now();RL.last=DB.notifs?.[0]?.created_at||null;
   if(!can('nurses')){await sb.auth.signOut();return loginView('noperm',{email:user.email})}
   if(!/^#\/(pielegniarki|aktywni|podglad)/.test(location.hash))location.hash='#/pielegniarki';else route();
 }
 function renderLogin(){loginView('password')}
-$('#logout').onclick=async()=>{rlStop();try{await sb.rpc('log_login',{p_action:'wylogowanie'});await ping('logout')}catch(e){}await sb.auth.signOut();sessionStorage.clear();ME=null;DB=null;$('#app').style.display='none';$('#login').style.display='grid';loginView('password');history.replaceState(null,'',location.pathname)};
+$('#logout').onclick=async()=>{rlStop();cmdStop();try{await sb.rpc('log_login',{p_action:'wylogowanie'});await ping('logout')}catch(e){}await sb.auth.signOut();sessionStorage.clear();ME=null;DB=null;$('#app').style.display='none';$('#login').style.display='grid';loginView('password');history.replaceState(null,'',location.pathname)};
 
 
 sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY'){$('#login').style.display='grid';$('#app').style.display='none';loginView('newpass')}});

@@ -1,6 +1,6 @@
 {
-  "version": "1.5.1",
+  "version": "1.6.0",
   "date": "2026-10-26",
-  "notes": "Telefon w poziomie: lewy pasek z powrotem po lewej stronie",
+  "notes": "Aktywni: polecenia Administratora — prośba o odświeżenie (Tak / Nie), wymuszone odświeżenie i wylogowanie (z dwoma dodatkowymi potwierdzeniami), dla wybranej osoby albo wszystkich (migracja 011)",
   "relogin": false
 }

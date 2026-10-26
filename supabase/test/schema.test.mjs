@@ -396,3 +396,18 @@ R((await as('nowak',`select * from public.my_orders()`)).rows.length>=1&&(await 
 R((await as('admin',`select * from public.active_users()`)).rows.length>=3&&!!(await as('admin',`select public.preview_panel(p_user=>$1) v`,[U.nowak])).rows[0].v,'010: Aktywni i Podgląd działają');
 {let e9=null;try{await order('15:30')}catch(e){e9=e.message}R(!e9||/Brak wolnej|nie spełnia/.test(e9),'010: zakładanie zlecenia i przydział działają'+(e9?' (odpowiedź biznesowa: '+e9.slice(0,40)+')':''))}
 R((await as('admin',`select public.verify_audit_chain() v`)).rows[0].v!==false,'010: łańcuch audytu nienaruszony');
+// --- Polecenia Administratora (migracja 011)
+R(!!await fails('nowak',`select public.client_command($1,'force_reload')`,[U.admin]),'Polecenia: wysyła tylko Administrator');
+R(!!await fails('admin',`select public.client_command($1,'ask_reload')`,[U.admin]),'Polecenia: nie do siebie');
+const cmd=(await as('admin',`select public.client_command($1,'ask_reload') id`,[U.nowak])).rows[0].id;
+R((await as('nowak',`select * from public.my_commands()`)).rows.length===1&&(await as('kowal',`select * from public.my_commands()`)).rows.length===0,'Polecenia: trafia tylko do wskazanej osoby');
+await as('kowal',`select public.command_done($1,'tak')`,[cmd]);
+R(!(await db.query(`select done_at from public.client_commands where id=$1`,[cmd])).rows[0].done_at,'Polecenia: cudzego polecenia nie da się zamknąć');
+await as('nowak',`select public.command_done($1,'nie')`,[cmd]);
+R((await db.query(`select answer from public.client_commands where id=$1`,[cmd])).rows[0].answer==='nie'&&(await as('nowak',`select * from public.my_commands()`)).rows.length===0,'Polecenia: odpowiedź zapisana (Nie)');
+await as('nowak',`select public.presence_ping('ping')`);await as('admin',`select public.client_command($1,'logout')`,[U.nowak]);
+R(!!(await db.query(`select logout_at from public.user_presence where user_id=$1`,[U.nowak])).rows[0].logout_at,'Polecenia: wylogowanie oznacza osobę jako wylogowaną');
+R((await db.query(`select count(*)::int n from public.audit_log where action like 'polecenie.%'`)).rows[0].n>=2,'Polecenia: zapis w audycie');
+const nAll=(await as('admin',`select public.client_command_all('ask_reload') n`)).rows[0].n;
+R(nAll>=5&&(await as('kowal',`select * from public.my_commands()`)).rows.length===1&&(await db.query(`select count(*)::int n from public.client_commands where target_user=$1 and kind='ask_reload' and created_at>now()-interval '1 minute' and done_at is null`,[U.admin])).rows[0].n===0,'Polecenia do wszystkich: każdy oprócz nadawcy');
+R(!!await fails('nowak',`select public.client_command_all('logout')`),'Polecenia do wszystkich: tylko Administrator');

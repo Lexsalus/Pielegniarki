@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.6.0] — 2026-10-26
+- Aktywni: polecenia Administratora — prośba o odświeżenie (Tak / Nie), wymuszone odświeżenie i wylogowanie (z dwoma dodatkowymi potwierdzeniami), dla wybranej osoby albo wszystkich (migracja 011)
+
 ## [1.5.1] — 2026-10-26
 - Telefon w poziomie: lewy pasek z powrotem po lewej stronie
 

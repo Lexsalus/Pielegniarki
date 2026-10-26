@@ -23,7 +23,7 @@ supabase/           schema.sql (użytkownicy, role, audyt, powiadomienia) + migr
 
 ## Baza
 
-Supabase, projekt **CRM Pielęgniarki** (dawniej „CRMKP”; `ixlhfhzgzotukstoezcj`, UE, Irlandia) — tylko dla tego panelu (od 26.10.2026 PiK ma własną bazę — projekt „Porównywarka”). Wdrożone: `schema.sql`, migracje 002–005 („Aktywni”, „Podgląd” — wdrożona 26.10.2026); 006 (komunikator) — wdrożona 26.10.2026; 007 (telefon, status) — wdrożona 26.10.2026; 008 (powiadomienie o odczycie) — wdrożona 26.10.2026; 009 (poprawki bezpieczeństwa) — wdrożona 26.10.2026; 010 (usunięcie pustych tabel CRM kancelarii) — wdrożona 26.10.2026; zasady haseł: min. 10 znaków, małe i wielkie litery, cyfra; zmiana hasła wymaga ponownego potwierdzenia, pg_cron `zlecenia-limit-czasu` (co minutę) i `przypomnienia-terminy`. Logowanie (Auth): Site URL i Redirect URLs — `https://lexsalus.github.io/Pielegniarki/`; rejestracja wyłączona, 2FA (TOTP) włączone.
+Supabase, projekt **CRM Pielęgniarki** (dawniej „CRMKP”; `ixlhfhzgzotukstoezcj`, UE, Irlandia) — tylko dla tego panelu (od 26.10.2026 PiK ma własną bazę — projekt „Porównywarka”). Wdrożone: `schema.sql`, migracje 002–005 („Aktywni”, „Podgląd” — wdrożona 26.10.2026); 006 (komunikator) — wdrożona 26.10.2026; 007 (telefon, status) — wdrożona 26.10.2026; 008 (powiadomienie o odczycie) — wdrożona 26.10.2026; 009 (poprawki bezpieczeństwa) — wdrożona 26.10.2026; 010 (usunięcie pustych tabel CRM kancelarii) — wdrożona 26.10.2026; 011 (polecenia Administratora) — czeka na wdrożenie; zasady haseł: min. 10 znaków, małe i wielkie litery, cyfra; zmiana hasła wymaga ponownego potwierdzenia, pg_cron `zlecenia-limit-czasu` (co minutę) i `przypomnienia-terminy`. Logowanie (Auth): Site URL i Redirect URLs — `https://lexsalus.github.io/Pielegniarki/`; rejestracja wyłączona, 2FA (TOTP) włączone.
 
 Pozostałości po CRM kancelarii (puste tabele spraw, klientów, finansów, terminów, zgłoszeń) usunięte migracją 010 (26.10.2026). Pusty folder plików „akta” w Storage zostaje bez reguł dostępu — można go usunąć ręcznie w panelu Supabase.
 
@@ -35,6 +35,7 @@ Klucz w `index.html` to klucz publiczny (`sb_publishable_…`) — może być ja
 - **Pielęgniarka** (rola `nurse`): tylko własny panel — swoje zlecenia (przyjmij / odrzuć, statusy), obszar i terminarz do zatwierdzenia, własne wypłaty.
 - Nowe konto: Supabase → Authentication → Users → Add user (Auto Confirm). W panelu: **Ustawienia → Konta** — rola (Pielęgniarka / Administrator), „Aktywne”, Zapisz; potem karta pielęgniarki → Dane i usługi → Konto. Konto bez uprawnienia „Pielęgniarki” po zalogowaniu dostaje komunikat o braku dostępu.
 - **Aktywni** (lewe menu, tylko Administrator): kto jest teraz zalogowany — panel co minutę wysyła sygnał obecności; aktywny = sygnał w ciągu 2 minut, bez wylogowania.
+- **Polecenia w „Aktywni”** (tylko Administrator): 🔄 prośba o odświeżenie (osoba odpowiada Tak / Nie), ⚡ wymuszone odświeżenie i ⏏ wylogowanie — oba z dwoma dodatkowymi potwierdzeniami; dla wybranej osoby albo „Do wszystkich”. Wylogowanie unieważnia też sesję w bazie (działa na starej wersji panelu). Wszystko trafia do audytu.
 - **Podgląd** (lewe menu, tylko Administrator): panel tak, jak widzi go wybrana rola (Pielęgniarka — na przykładzie wybranej karty) albo konkretna osoba; tylko do odczytu. Zlecenia i stawki z tych samych zapytań co panel pielęgniarki.
 - **Komunikator** (dymek 💬 w prawym dolnym rogu): pielęgniarka pisze tylko z Administratorem / dyspozytorem, Administrator — z każdym; pielęgniarki między sobą nie. Wiadomości do osób niezalogowanych są doręczane po zalogowaniu; ✓ wysłane, ✓✓ doręczone, ✓✓ (niebieskie) przeczytane. Wątek przy zleceniu (💬 na liście zleceń i w panelu pielęgniarki): Administrator / dyspozytor + pielęgniarka przypisana do zlecenia. Bez załączników. Nowa wiadomość → powiadomienie w dzwonku (jedno na rozmowę); gdy odbiorca przeczyta wiadomość — „Przeczytane przez: X” (jedno na rozmowę, bez osobnego o doręczeniu).
 - **Telefon i status**: numer telefonu ustawia Administrator w Ustawieniach → Konta; w komunikatorze przy osobie jest 📞 (szybkie połączenie). Numer widzą tylko osoby, które mogą ze sobą pisać (pielęgniarki nie widzą numerów innych pielęgniarek). Administrator / dyspozytor ustawia swój status kliknięciem w swoją nazwę u góry: 🟢 Dostępny, 🟠 Zajęty, ⚪ Niewidoczny (dla wszystkich wygląda na niezalogowanego, także w „Aktywni”). Status zostaje po wylogowaniu. Gdy Administrator / dyspozytor zaloguje się ze statusem Dostępny albo zmieni status na Dostępny, inni zalogowani dostają komunikat z krótkim dźwiękiem.
@@ -60,7 +61,7 @@ Pielęgniarka widzi tylko siebie i własne zlecenia (bez ceny dla klienta i mar�
 
 ## Testy
 
-`supabase/test/` — opis w `supabase/test/e2e/README.md`. Wynik 26.10.2026: reguły bazy 197/197, interfejs 93/93.
+`supabase/test/` — opis w `supabase/test/e2e/README.md`. Wynik 26.10.2026: reguły bazy 207/207, interfejs 98/98.
 
 ## Rozstrzygnięcia tam, gdzie projekt milczy (do potwierdzenia albo zmiany)
 
