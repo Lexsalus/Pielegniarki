@@ -19,7 +19,8 @@ alter default privileges in schema public grant all on tables to anon, authentic
 alter default privileges in schema public grant all on functions to anon, authenticated;
 alter default privileges in schema public grant all on sequences to anon, authenticated;`);
 try{await db.exec(fs.readFileSync(new URL('../schema.sql', import.meta.url),'utf8'));R(true,'schema.sql wykonany bez błędów')}catch(e){R(false,'schema.sql: '+e.message);process.exit(1)}
-for(const m of fs.readdirSync(new URL('../migrations/', import.meta.url)).sort()){try{await db.exec(fs.readFileSync(new URL('../migrations/'+m, import.meta.url),'utf8'));R(true,'migracja '+m)}catch(e){R(false,'migracja '+m+': '+e.message);process.exit(1)}}
+const MIG=fs.readdirSync(new URL('../migrations/', import.meta.url)).sort(),LATE=m=>m>='010';   // 010+ (usunięcie CRM kancelarii) — na końcu, po testach CRM
+for(const m of MIG.filter(m=>!LATE(m))){try{await db.exec(fs.readFileSync(new URL('../migrations/'+m, import.meta.url),'utf8'));R(true,'migracja '+m)}catch(e){R(false,'migracja '+m+': '+e.message);process.exit(1)}}
 const U={admin:'11111111-1111-1111-1111-111111111111',jan:'22222222-2222-2222-2222-222222222222',piotr:'33333333-3333-3333-3333-333333333333',anna:'44444444-4444-4444-4444-444444444444',kasia:'55555555-5555-5555-5555-555555555555',tech:'66666666-6666-6666-6666-666666666666'};
 for(const [k,id] of Object.entries(U))await db.query(`insert into auth.users(id,email,raw_user_meta_data) values($1,$2,$3)`,[id,k+'@k.test',{full_name:k}]);
 R((await db.query('select count(*)::int n from public.profiles where not active')).rows[0].n===6,'trigger: 6 profili, nieaktywne do zatwierdzenia');
@@ -378,3 +379,20 @@ R(pv1.includes('nowak@k.test')&&pv1.includes('admin@k.test')&&!pv1.includes('kow
 R((await as('admin',`select count(*)::int n from public.profiles`)).rows[0].n>=8,'Konta: Administrator widzi wszystkie');
 R((await db.query(`select count(*)::int n from pg_proc p join pg_namespace s on s.oid=p.pronamespace where s.nspname='app' and p.proname in ('audit_readonly','path_case','rings_has','km','pip','member_guard','align') and p.proconfig is null`)).rows[0].n===0,'Funkcje pomocnicze: stała ścieżka wyszukiwania');
 R(+(await db.query(`select app.km(52.0,21.0,52.1,21.0) v`)).rows[0].v>11,'Funkcje pomocnicze działają po zmianie');
+
+// --- Migracja 010: usunięcie pustych pozostałości CRM kancelarii
+R(!!await db.exec(fs.readFileSync(new URL('../migrations/010_usun_crm_kancelarii.sql', import.meta.url),'utf8')).catch(e=>e),'010: bezpiecznik — z danymi w tabelach spraw migracja się nie wykona');
+await db.exec(`set session_replication_role=replica; truncate public.allocation_versions, public.allocations, public.attorney_fees, public.payments, public.correction_requests, public.entry_versions, public.document_versions, public.deadline_versions, public.deadlines, public.documents, public.case_entries, public.case_stages, public.case_history, public.case_members, public.case_finance, public.leads, public.cases, public.clients cascade; set session_replication_role=origin;`);
+for(const m of MIG.filter(LATE)){try{await db.exec(fs.readFileSync(new URL('../migrations/'+m, import.meta.url),'utf8'));R(true,'migracja '+m)}catch(e){R(false,'migracja '+m+': '+e.message);process.exit(1)}}
+const left=(await db.query(`select string_agg(tablename,',') t from pg_tables where schemaname='public' and tablename in ('cases','clients','leads','deadlines','documents','payments','case_members','holidays','currencies')`)).rows[0].t;
+R(!left,'010: tabele CRM kancelarii usunięte'+(left?' — zostały: '+left:''));
+const broken=(await db.query(`select string_agg(n.nspname||'.'||p.proname,',') f from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname in ('public','app') and p.prosrc ~ '(can_case|case_flag|app[.]member[(]|emergency_active|path_case|case_number_of|app[.]hist[(]|public[.]cases|public[.]leads|public[.]clients)'`)).rows[0].f;
+R(!broken,'010: żadna pozostała funkcja nie odwołuje się do usuniętych'+(broken?' — '+broken:''));
+R((await db.query(`select count(*)::int n from information_schema.columns where table_name='notifications' and column_name='case_id'`)).rows[0].n===0,'010: powiadomienia bez pola „sprawa”');
+// panel pielęgniarek działa dalej
+await as('admin',`select public.chat_send(p_to=>$1,p_body=>'Po porządkach')`,[U.nowak]);
+R((await as('nowak',`select * from public.notifications where event_type='czat.wiadomosc' and read_at is null`)).rows.length===1,'010: powiadomienia działają');
+R((await as('nowak',`select * from public.my_orders()`)).rows.length>=1&&(await cs('nowak')).contacts.length>=1,'010: panel pielęgniarki i komunikator działają');
+R((await as('admin',`select * from public.active_users()`)).rows.length>=3&&!!(await as('admin',`select public.preview_panel(p_user=>$1) v`,[U.nowak])).rows[0].v,'010: Aktywni i Podgląd działają');
+{let e9=null;try{await order('15:30')}catch(e){e9=e.message}R(!e9||/Brak wolnej|nie spełnia/.test(e9),'010: zakładanie zlecenia i przydział działają'+(e9?' (odpowiedź biznesowa: '+e9.slice(0,40)+')':''))}
+R((await as('admin',`select public.verify_audit_chain() v`)).rows[0].v!==false,'010: łańcuch audytu nienaruszony');

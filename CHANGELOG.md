@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.3.2] — 2026-10-26
+- Paski przewijania w stylu panelu (jasny i ciemny motyw)
+
 ## [1.3.1] — 2026-10-26
 - Podpisy kontrolne bibliotek (SRI); liczba osób online przy „Aktywni” (czerwona kropka, gdy nikogo); przycisk instalacji znika od razu po zainstalowaniu aplikacji
 
