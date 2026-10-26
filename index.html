@@ -200,7 +200,24 @@ tr.click{cursor:pointer}tr.click:hover td{background:var(--card2)}
 .lgtop{position:fixed;top:14px;right:16px;z-index:5;display:flex;gap:8px;align-items:center}
 @media(max-width:760px){.lng span{display:none}}
 .pwabtn[hidden]{display:none!important}
-@media(max-width:1100px){.me .pwalbl{display:none}}
+.me .pwalbl{display:none}
+#chatFab{position:fixed;right:20px;bottom:20px;z-index:60;width:54px;height:54px;border-radius:50%;border:0;background:var(--accent);color:#fff;font-size:1.45rem;cursor:pointer;box-shadow:0 8px 24px -6px rgba(124,92,255,.6);display:flex;align-items:center;justify-content:center}
+#chatFab[hidden]{display:none}#chatFab .dot{position:absolute;top:-2px;right:-2px;background:var(--bad);color:#fff;border-radius:20px;font-size:.7rem;font-weight:800;padding:2px 6px;min-width:20px}#chatFab .dot[hidden]{display:none}
+#chatBox{position:fixed;right:20px;bottom:86px;z-index:61;width:min(380px,calc(100vw - 32px));height:min(540px,calc(100vh - 120px));background:var(--bg2);border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh);display:none;flex-direction:column;overflow:hidden}
+#chatBox.show{display:flex}
+.chh{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}.chh b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.chh small{font-weight:500;font-size:.75rem}
+.chl{overflow:auto;flex:1;padding:6px}.chsec{font-size:.7rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);padding:10px 8px 4px}
+.chi{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:8px;border-radius:10px;cursor:pointer;text-align:left;color:var(--txt)}.chi:hover{background:var(--card)}
+.cht{flex:1;min-width:0;display:flex;flex-direction:column}.cht small{color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chi .cnt{background:var(--bad);color:#fff;border-radius:20px;font-size:.72rem;padding:1px 7px;font-weight:700}
+.av.sm{width:34px;height:34px;font-size:.8rem;flex:none;background:var(--card2);color:var(--txt)}
+.ond{position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border-radius:50%;background:var(--mut);border:2px solid var(--bg2)}.ond.on{background:var(--good)}
+.chm{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.msg{max-width:82%;display:flex;flex-direction:column;align-items:flex-start}.msg.me{align-self:flex-end;align-items:flex-end}
+.msg .bub{background:var(--card2);padding:8px 11px;border-radius:14px 14px 14px 4px;white-space:normal;word-break:break-word}.msg.me .bub{background:var(--accent);color:#fff;border-radius:14px 14px 4px 14px}
+.msg .meta{color:var(--mut);font-size:.7rem;margin-top:2px}.msg .who{color:var(--mut);font-size:.72rem;margin-bottom:2px}
+.ck{letter-spacing:-2px;margin-left:3px}.ck.rd{color:var(--info);font-weight:800}
+.chf{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}.chf textarea{flex:1;resize:none;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-height:42px;max-height:120px}
 </style>
 </head>
 <body>
@@ -377,7 +394,8 @@ function drawNotifs(){const L=DB.notifs||[];$('#ntBox').innerHTML=`<div style="d
   (L.length?L.map(n=>`<a href="#" onclick="event.preventDefault();ntOpen('${n.id}')" style="${n.read_at?'opacity:.6':''}"><span class="dotc" style="background:${n.priority==='pilne'?'var(--bad)':n.priority==='wazne'?'var(--warn)':'var(--info)'};margin-top:6px"></span><span><b>${esc(n.title)}</b><br><small class="mut">${esc(n.body||'')} · ${fDT(n.created_at)}</small></span></a>`).join(''):'<div class="mut" style="padding:12px">Brak powiadomień</div>')}
 $('#bell').onclick=e=>{e.stopPropagation();const b=$('#ntBox');if(b.classList.toggle('show'))drawNotifs()};
 addEventListener('click',e=>{if(!e.target.closest('#ntBox'))$('#ntBox')?.classList.remove('show')});
-async function ntOpen(id){const n=DB.notifs.find(x=>x.id===id);$('#ntBox').classList.remove('show');if(!n.read_at){await sb.from('notifications').update({read_at:new Date().toISOString()}).eq('id',id);n.read_at=new Date().toISOString()}
+async function ntOpen(id){const n=DB.notifs.find(x=>x.id===id);$('#ntBox').classList.remove('show');
+  if(/^czat:[uo]:/.test(n.link||'')&&typeof chatOpenUser==='function'){const [,k,x]=n.link.split(':');if(k==='u')chatOpenUser(x);else chatOpenOrder(x,(n.title.match(/#(\d+)/)||[])[1]||'');return}if(!n.read_at){await sb.from('notifications').update({read_at:new Date().toISOString()}).eq('id',id);n.read_at=new Date().toISOString()}
   const h=NT_LINK[n.event_type]||'#/pielegniarki';if(location.hash===h)rerender();else location.hash=h;renderShell()}
 async function ntAllRead(){await sb.from('notifications').update({read_at:new Date().toISOString()}).eq('recipient_id',ME.id).is('read_at',null);(DB.notifs||[]).forEach(n=>n.read_at=n.read_at||new Date().toISOString());renderShell();drawNotifs()}
 /* --- logowanie: e-mail + hasło, potem 2FA (TOTP) --- */
@@ -448,5 +466,6 @@ addEventListener('DOMContentLoaded',async()=>{
 setInterval(async()=>{if(ME&&NZ.D&&document.visibilityState==='visible'&&!$('#modal').classList.contains('show')&&!location.hash.includes('/obszar')){await reload();renderShell()}},60000);
 </script>
 <script src="pielegniarki.js"></script>
+<script src="czat.js"></script>
 </body>
 </html>

@@ -10,13 +10,14 @@ Panel administratora według projektu „Zakładka Pielęgniarki” (23.10.2026)
 index.html          powłoka: logowanie (e-mail + hasło, 2FA), uprawnienia, menu
 i18n.js             tłumaczenie interfejsu: polski / ukraiński / angielski (flagi w górnym pasku i na ekranie logowania; wybór zapamiętany w przeglądarce)
 manifest.webmanifest, sw.js, icons/   aplikacja (PWA): przycisk „Zainstaluj aplikację” na ekranie logowania i w górnym pasku
+czat.js             komunikator: dymek w prawym dolnym rogu (rozmowy 1:1) i wątki przy zleceniach
 pielegniarki.js     cała zakładka: lista, mapa, karta, przydział, zlecenia, dostępność, oczekujący, ustawienia, panel pielęgniarki
 supabase/           schema.sql (użytkownicy, role, audyt, powiadomienia) + migrations/002–005; test/ — reguły bazy i test przez interfejs
 ```
 
 ## Baza
 
-Supabase, projekt **CRMKP** (`ixlhfhzgzotukstoezcj`, UE, Irlandia) — tylko dla tego panelu (od 26.10.2026 PiK ma własną bazę). Wdrożone: `schema.sql`, migracje 002–005 („Aktywni”, „Podgląd” — wdrożona 26.10.2026), pg_cron `zlecenia-limit-czasu` (co minutę) i `przypomnienia-terminy`. Logowanie (Auth): Site URL i Redirect URLs — `https://lexsalus.github.io/Pielegniarki/`; rejestracja wyłączona, 2FA (TOTP) włączone.
+Supabase, projekt **CRMKP** (`ixlhfhzgzotukstoezcj`, UE, Irlandia) — tylko dla tego panelu (od 26.10.2026 PiK ma własną bazę). Wdrożone: `schema.sql`, migracje 002–005 („Aktywni”, „Podgląd” — wdrożona 26.10.2026); 006 (komunikator) — czeka na wdrożenie, pg_cron `zlecenia-limit-czasu` (co minutę) i `przypomnienia-terminy`. Logowanie (Auth): Site URL i Redirect URLs — `https://lexsalus.github.io/Pielegniarki/`; rejestracja wyłączona, 2FA (TOTP) włączone.
 
 Pozostałości po CRM kancelarii w tej bazie (puste tabele spraw, klientów, finansów, terminów, formularz `leads` z zapisem anonimowym) nie są używane — do usunięcia osobną migracją po decyzji właściciela.
 
@@ -29,6 +30,7 @@ Klucz w `index.html` to klucz publiczny (`sb_publishable_…`) — może być ja
 - Nowe konto: Supabase → Authentication → Users → Add user (Auto Confirm). W panelu: **Ustawienia → Konta** — rola (Pielęgniarka / Administrator), „Aktywne”, Zapisz; potem karta pielęgniarki → Dane i usługi → Konto. Konto bez uprawnienia „Pielęgniarki” po zalogowaniu dostaje komunikat o braku dostępu.
 - **Aktywni** (lewe menu, tylko Administrator): kto jest teraz zalogowany — panel co minutę wysyła sygnał obecności; aktywny = sygnał w ciągu 2 minut, bez wylogowania.
 - **Podgląd** (lewe menu, tylko Administrator): panel tak, jak widzi go wybrana rola (Pielęgniarka — na przykładzie wybranej karty) albo konkretna osoba; tylko do odczytu. Zlecenia i stawki z tych samych zapytań co panel pielęgniarki.
+- **Komunikator** (dymek 💬 w prawym dolnym rogu): pielęgniarka pisze tylko z Administratorem / dyspozytorem, Administrator — z każdym; pielęgniarki między sobą nie. Wiadomości do osób niezalogowanych są doręczane po zalogowaniu; ✓ wysłane, ✓✓ doręczone, ✓✓ (niebieskie) przeczytane. Wątek przy zleceniu (💬 na liście zleceń i w panelu pielęgniarki): Administrator / dyspozytor + pielęgniarka przypisana do zlecenia. Bez załączników. Nowa wiadomość → powiadomienie w dzwonku (jedno na rozmowę).
 - **Powiadomienia** (dzwonek u góry): propozycje zleceń, zlecenia dla dyspozytora, zmiany obszaru i terminarza do zatwierdzenia.
 
 ## Dane testowe
@@ -41,7 +43,7 @@ Pielęgniarka widzi tylko siebie i własne zlecenia (bez ceny dla klienta i mar�
 
 ## Testy
 
-`supabase/test/` — opis w `supabase/test/e2e/README.md`. Wynik 26.10.2026: reguły bazy 137/137, interfejs 69/69.
+`supabase/test/` — opis w `supabase/test/e2e/README.md`. Wynik 26.10.2026: reguły bazy 159/159, interfejs 79/79.
 
 ## Rozstrzygnięcia tam, gdzie projekt milczy (do potwierdzenia albo zmiany)
 
