@@ -115,6 +115,10 @@ async def main():
     await login('nowak@k.test')
     ok('#1001' in await T('#view') and 'Przyjmij' in await T('#view'),'pielęgniarka widzi propozycję z odliczaniem')
     ok('Jan Klient' not in await T('#view'),'przed przyjęciem: bez danych klienta (tylko adres)')
+    if 'index.html' in U:
+      ok(await pg.locator('#bell .dot').count()==1,'dzwonek: nieprzeczytane powiadomienie o zleceniu')
+      await pg.click('#bell'); await pg.wait_for_timeout(300); ok('Nowe zlecenie #1001' in await T('#ntBox'),'lista powiadomień: propozycja zlecenia')
+      await pg.click('#ntBox a >> nth=0'); await pg.wait_for_timeout(700); ok(await pg.locator('#bell .dot').count()==0,'otwarcie powiadomienia → przeczytane')
     await pg.screenshot(path=HERE+'panel.png')
     await pg.click('text=Przyjmij'); await pg.wait_for_timeout(1200)
     ok('Zaplanowane wizyty' in await T('#view') and 'Jan Klient' in await T('#view'),'zlecenie przyjęte → zaplanowane, dane klienta widoczne')
@@ -138,6 +142,12 @@ async def main():
     ok('klucza' in await toast(),'Google Maps bez klucza → komunikat')
     await pg.select_option('#nzcfg [name=map_provider]','leaflet'); await pg.select_option('#nzcfg [name=overlap_mode]','distance'); await pg.select_option('#nzcfg [name=distance_mode]','roads'); await pg.fill('#nzcfg [name=travel_buffer_min]','20')
     await pg.click('#nzcfg button.pri'); await pg.wait_for_timeout(1000)
+    if 'index.html' in U:
+      await pg.wait_for_timeout(300); ok('Konta' in await T('#view') and 'nowy@k.test' in await T('#view'),'Ustawienia → Konta: lista kont')
+      uid=sql("select id from public.profiles where email='nowy@k.test'")[0]['id']
+      await pg.select_option(f'#acr_{uid}','nurse'); await pg.check(f'#aca_{uid}'); await pg.locator('tr',has_text='nowy@k.test').locator('button').click(); await pg.wait_for_timeout(1000)
+      p_=sql("select role,active from public.profiles where id=$1",[uid])[0]; ok(p_['role']=='nurse' and p_['active'],'aktywacja konta i rola Pielęgniarka z panelu')
+      await nav('#/pielegniarki/ustawienia')
     s=sql("select * from public.nurse_settings")[0]; ok(s['overlap_mode']=='distance' and s['distance_mode']=='roads' and s['travel_buffer_min']==20,'ustawienia zapisane: odległość, po drogach, bufor 20 min')
     await nav('#/pielegniarki',1500); await pg.click('button.chip:has-text("Strefy cenowe")'); await pg.wait_for_timeout(500); await pg.click('button.chip:has-text("Białe plamy")'); await pg.wait_for_timeout(500)
     ok(await pg.locator('#nzmap path').count()>0,'warstwy mapy: strefy cenowe, białe plamy')

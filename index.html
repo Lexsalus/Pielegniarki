@@ -187,6 +187,7 @@ tr.click{cursor:pointer}tr.click:hover td{background:var(--card2)}
     <div class="top">
       <div style="flex:1"></div>
       <div class="me">
+        <div style="position:relative"><button class="icon-btn" id="bell" title="Powiadomienia">🔔</button><div class="sres" id="ntBox" style="right:0;left:auto;width:min(380px,90vw);max-height:70vh;overflow:auto;top:44px"></div></div>
         <button class="icon-btn" id="theme" title="Motyw">🌓</button>
         <div id="meBox" style="display:flex;gap:10px;align-items:center"></div>
         <button class="btn sm" id="logout">Wyloguj</button>
@@ -250,6 +251,7 @@ $('#theme').onclick=()=>{const v=document.documentElement.dataset.theme==='light
 function renderShell(){
   const cnt=typeof nzBadge==='function'?nzBadge():0;
   $('#side').innerHTML=`<div class="brand"><i>🩺</i>Pielęgniarki</div><a class="nav on" href="#/pielegniarki">🩺 Pielęgniarki${cnt?`<span class="cnt">${cnt}</span>`:''}</a><div class="sp"></div>`;
+  const un=(DB.notifs||[]).filter(n=>!n.read_at).length;$('#bell').innerHTML='🔔'+(un?`<span class="dot">${un}</span>`:'');
   $('#meBox').innerHTML=`<span class="av" style="background:${esc(ME.color||'#7c5cff')}">${esc(initials(ME.name||'?'))}</span><div><b>${esc(ME.name)}</b><small>${esc(ROLES[ME.role]||'')}</small></div>`;
 }
 const ROUTES={};
@@ -294,8 +296,18 @@ async function reload(){
   Object.keys(ROLE_DEF).forEach(k=>delete ROLE_DEF[k]);rp.forEach(r=>{(ROLE_DEF[r.role]=ROLE_DEF[r.role]||{})[r.perm]=r.level});
   const d={users:p.map(x=>({id:x.id,name:x.full_name||x.email,role:x.role,email:x.email,color:x.color,active:x.active})),overrides:{}};
   po.forEach(o=>{(d.overrides[o.user_id]=d.overrides[o.user_id]||{})[o.perm]={value:o.level,until:o.valid_until}});
+  const nt=await sb.from('notifications').select('*').eq('recipient_id',SESSION_UID).order('created_at',{ascending:false}).limit(50);d.notifs=nt.error?[]:nt.data;
   DB=d;ME=d.users.find(u=>u.id===SESSION_UID)||ME;
 }
+/* --- powiadomienia (propozycje zleceń, dyspozytor, zmiany do zatwierdzenia) --- */
+const NT_LINK={'order.proposed':'#/pielegniarki','order.dispatch':'#/pielegniarki/zlecenia','nurse.area':'#/pielegniarki','nurse.availability':'#/pielegniarki'};
+function drawNotifs(){const L=DB.notifs||[];$('#ntBox').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)"><b>Powiadomienia</b>${L.some(n=>!n.read_at)?'<button class="btn sm" onclick="ntAllRead()">Oznacz wszystkie</button>':''}</div>`+
+  (L.length?L.map(n=>`<a href="#" onclick="event.preventDefault();ntOpen('${n.id}')" style="${n.read_at?'opacity:.6':''}"><span class="dotc" style="background:${n.priority==='pilne'?'var(--bad)':n.priority==='wazne'?'var(--warn)':'var(--info)'};margin-top:6px"></span><span><b>${esc(n.title)}</b><br><small class="mut">${esc(n.body||'')} · ${fDT(n.created_at)}</small></span></a>`).join(''):'<div class="mut" style="padding:12px">Brak powiadomień</div>')}
+$('#bell').onclick=e=>{e.stopPropagation();const b=$('#ntBox');if(b.classList.toggle('show'))drawNotifs()};
+addEventListener('click',e=>{if(!e.target.closest('#ntBox'))$('#ntBox')?.classList.remove('show')});
+async function ntOpen(id){const n=DB.notifs.find(x=>x.id===id);$('#ntBox').classList.remove('show');if(!n.read_at){await sb.from('notifications').update({read_at:new Date().toISOString()}).eq('id',id);n.read_at=new Date().toISOString()}
+  const h=NT_LINK[n.event_type]||'#/pielegniarki';if(location.hash===h)rerender();else location.hash=h;renderShell()}
+async function ntAllRead(){await sb.from('notifications').update({read_at:new Date().toISOString()}).eq('recipient_id',ME.id).is('read_at',null);(DB.notifs||[]).forEach(n=>n.read_at=n.read_at||new Date().toISOString());renderShell();drawNotifs()}
 /* --- logowanie: e-mail + hasło, potem 2FA (TOTP) --- */
 let SESSION_UID=null;
 function loginView(step,extra={}){

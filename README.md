@@ -24,13 +24,8 @@ Klucz w `index.html` to klucz publiczny (`sb_publishable_…`) — może być ja
 
 - **Administrator** (uprawnienie `nurses` = pełne): wszystko w zakładce.
 - **Pielęgniarka** (rola `nurse`): tylko własny panel — swoje zlecenia (przyjmij / odrzuć, statusy), obszar i terminarz do zatwierdzenia, własne wypłaty.
-- Nowe konto: Supabase → Authentication → Users → Add user (Auto Confirm), potem SQL Editor:
-
-```sql
-update public.profiles set role='nurse', active=true, full_name='Imię Nazwisko' where email='adres@pielegniarki.pl';
-```
-
-  Następnie w panelu: karta pielęgniarki → Dane i usługi → Konto. Konto bez uprawnienia „Pielęgniarki” po zalogowaniu dostaje komunikat o braku dostępu.
+- Nowe konto: Supabase → Authentication → Users → Add user (Auto Confirm). W panelu: **Ustawienia → Konta** — rola (Pielęgniarka / Administrator), „Aktywne”, Zapisz; potem karta pielęgniarki → Dane i usługi → Konto. Konto bez uprawnienia „Pielęgniarki” po zalogowaniu dostaje komunikat o braku dostępu.
+- **Powiadomienia** (dzwonek u góry): propozycje zleceń, zlecenia dla dyspozytora, zmiany obszaru i terminarza do zatwierdzenia.
 
 ## Reguły pilnowane przez bazę
 
@@ -38,7 +33,7 @@ Pielęgniarka widzi tylko siebie i własne zlecenia (bez ceny dla klienta i mar�
 
 ## Testy
 
-`supabase/test/` — opis w `supabase/test/e2e/README.md`. Wynik 26.10.2026: reguły bazy 120/120, interfejs 40/40.
+`supabase/test/` — opis w `supabase/test/e2e/README.md`. Wynik 26.10.2026: reguły bazy 120/120, interfejs 45/45.
 
 ## Rozstrzygnięcia tam, gdzie projekt milczy (do potwierdzenia albo zmiany)
 
@@ -50,7 +45,6 @@ Pielęgniarka widzi tylko siebie i własne zlecenia (bez ceny dla klienta i mar�
 
 ## Propozycje (niewdrożone, decyzja właściciela)
 
-- Zarządzanie kontami (rola, aktywacja) w panelu zamiast SQL.
 - Formularz „Zamów badania w domu” dla klientów (strona 8 projektu); teraz zlecenia zakłada Administrator / dyspozytor.
 - 2FA obowiązkowe dla roli Pielęgniarka (dane zdrowotne, RODO).
 - Anulowanie zlecenia (brak takiego statusu w projekcie).

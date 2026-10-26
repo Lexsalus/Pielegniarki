@@ -767,3 +767,14 @@ function nzBadge(){
   if(isNurse())return NZ.D.myOrders.filter(o=>o.status==='zaproponowane').length;
   return NZ.D.orders.filter(o=>o.status==='nowe'&&o.needs_dispatcher).length+NZ.D.nurses.reduce((s,n)=>s+pendingFor(n.id),0);
 }
+/* --- konta: rola i aktywacja (Administrator) --- */
+{const orig=settingsView;settingsView=()=>orig()+accountsCard()}
+function accountsCard(){
+  const us=DB.users.slice().sort((a,b)=>(a.active===b.active?0:a.active?1:-1)||a.name.localeCompare(b.name,'pl'));
+  return `<div class="card" style="margin-top:14px"><h3>Konta</h3><div class="tw"><table><tr><th>Osoba</th><th>E-mail</th><th>Rola</th><th>Aktywne</th><th>Karta pielęgniarki</th><th></th></tr>
+    ${us.map(u=>{const n=NZ.D.nurses.find(x=>x.user_id===u.id),opts=[['nurse','Pielęgniarka'],['admin','Administrator']].concat(['nurse','admin'].includes(u.role)?[]:[[u.role,(ROLES[u.role]||u.role)+' — bez dostępu']]);
+      return `<tr style="${u.active?'':'opacity:.7'}"><td><b>${esc(u.name)}</b></td><td class="small">${esc(u.email)}</td><td><select class="f" id="acr_${u.id}" style="width:auto">${opts.map(([k,l])=>`<option value="${k}" ${u.role===k?'selected':''}>${esc(l)}</option>`).join('')}</select></td>
+        <td><label class="chk"><input type="checkbox" id="aca_${u.id}" ${u.active?'checked':''}></label></td><td class="small">${n?esc(n.full_name):'—'}</td><td><button class="btn sm" onclick="accSave('${u.id}')">Zapisz</button></td></tr>`}).join('')}</table></div>
+    <p class="hint">Nowe konto zakłada Administrator w Supabase (Authentication → Users → Add user, Auto Confirm). Pojawi się tu jako nieaktywne — nadaj rolę, zaznacz „Aktywne” i zapisz, potem powiąż z kartą pielęgniarki (karta → Dane i usługi → Konto). W systemie musi zostać co najmniej jeden aktywny Administrator (pilnuje baza); każda zmiana trafia do audytu.</p></div>`;
+}
+const accSave=id=>{const u=DB.users.find(x=>x.id===id),role=$('#acr_'+id).value,active=$('#aca_'+id).checked;if(u.role===role&&!!u.active===active)return toast('Brak zmian');nsafe(async()=>chk(await sb.from('profiles').update({role,active}).eq('id',id)),'Zapisano konto')};
