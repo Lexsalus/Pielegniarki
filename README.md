@@ -24,7 +24,7 @@ supabase/           schema.sql (użytkownicy, role, audyt, powiadomienia) + migr
 
 ## Baza
 
-Supabase, projekt **CRM Pielęgniarki** (dawniej „CRMKP”; `ixlhfhzgzotukstoezcj`, UE, Irlandia) — tylko dla tego panelu (od 26.10.2026 PiK ma własną bazę — projekt „Porównywarka”). Wdrożone: `schema.sql`, migracje 002–005 („Aktywni”, „Podgląd” — wdrożona 26.10.2026); 006 (komunikator) — wdrożona 26.10.2026; 007 (telefon, status) — wdrożona 26.10.2026; 008 (powiadomienie o odczycie) — wdrożona 26.10.2026; 009 (poprawki bezpieczeństwa) — wdrożona 26.10.2026; 010 (usunięcie pustych tabel CRM kancelarii) — wdrożona 26.10.2026; 011 (polecenia Administratora) — wdrożona 26.10.2026; 012 (logi działań, urządzenie przy osobie) — wdrożona 26.10.2026; zasady haseł: min. 10 znaków, małe i wielkie litery, cyfra; zmiana hasła wymaga ponownego potwierdzenia, pg_cron `zlecenia-limit-czasu` (co minutę) i `przypomnienia-terminy`. Logowanie (Auth): Site URL i Redirect URLs — `https://lexsalus.github.io/Pielegniarki/`; rejestracja wyłączona, 2FA (TOTP) włączone.
+Supabase, projekt **CRM Pielęgniarki** (dawniej „CRMKP”; `ixlhfhzgzotukstoezcj`, UE, Irlandia) — tylko dla tego panelu (od 26.10.2026 PiK ma własną bazę — projekt „Porównywarka”). Wdrożone: `schema.sql`, migracje 002–005 („Aktywni”, „Podgląd” — wdrożona 26.10.2026); 006 (komunikator) — wdrożona 26.10.2026; 007 (telefon, status) — wdrożona 26.10.2026; 008 (powiadomienie o odczycie) — wdrożona 26.10.2026; 009 (poprawki bezpieczeństwa) — wdrożona 26.10.2026; 010 (usunięcie pustych tabel CRM kancelarii) — wdrożona 26.10.2026; 011 (polecenia Administratora) — wdrożona 26.10.2026; 012 (logi działań, urządzenie przy osobie) — wdrożona 26.10.2026; 013 (wylogowanie natychmiast) — wdrożona 27.10.2026; zasady haseł: min. 10 znaków, małe i wielkie litery, cyfra; zmiana hasła wymaga ponownego potwierdzenia, pg_cron `zlecenia-limit-czasu` (co minutę) i `przypomnienia-terminy`. Logowanie (Auth): Site URL i Redirect URLs — `https://lexsalus.github.io/Pielegniarki/`; rejestracja wyłączona, 2FA (TOTP) włączone.
 
 Pozostałości po CRM kancelarii (puste tabele spraw, klientów, finansów, terminów, zgłoszeń) usunięte migracją 010 (26.10.2026). Pusty folder plików „akta” w Storage zostaje bez reguł dostępu — można go usunąć ręcznie w panelu Supabase.
 
@@ -36,7 +36,7 @@ Klucz w `index.html` to klucz publiczny (`sb_publishable_…`) — może być ja
 - **Pielęgniarka** (rola `nurse`): tylko własny panel — swoje zlecenia (przyjmij / odrzuć, statusy), obszar i terminarz do zatwierdzenia, własne wypłaty.
 - Nowe konto: Supabase → Authentication → Users → Add user (Auto Confirm). W panelu: **Ustawienia → Konta** — rola (Pielęgniarka / Administrator), „Aktywne”, Zapisz; potem karta pielęgniarki → Dane i usługi → Konto. Konto bez uprawnienia „Pielęgniarki” po zalogowaniu dostaje komunikat o braku dostępu.
 - **Aktywni** (lewe menu, tylko Administrator): kto jest teraz zalogowany — panel co minutę wysyła sygnał obecności; aktywny = sygnał w ciągu 2 minut, bez wylogowania.
-- **Polecenia w „Aktywni”** (tylko Administrator): 🔄 prośba o odświeżenie (osoba odpowiada Tak / Nie), ⚡ wymuszone odświeżenie i ⏏ wylogowanie — oba z dwoma dodatkowymi potwierdzeniami; dla wybranej osoby albo „Do wszystkich”. Wylogowanie unieważnia też sesję w bazie (działa na starej wersji panelu). Wszystko trafia do audytu.
+- **Polecenia w „Aktywni”** (tylko Administrator): 🔄 prośba o odświeżenie (osoba odpowiada Tak / Nie), ⚡ wymuszone odświeżenie i ⏏ wylogowanie — oba z dwoma dodatkowymi potwierdzeniami; dla wybranej osoby albo „Do wszystkich”. Wylogowanie działa natychmiast także na starej wersji panelu: baza odrzuca wszystkie wcześniejsze przepustki logowania tej osoby (migracja 013). Wszystko trafia do audytu.
 - **Urządzenie przy osobie** („Aktywni”, komunikator): 📱 telefon / tablet albo 💻 komputer z ostatniego logowania; po najechaniu — przeglądarka, system i czy to zainstalowana aplikacja. Przy statusie „Niewidoczny” ukryte.
 - **Logi działań** (📋 przy osobie w „Aktywni”, tylko Administrator): kliknięcia (podpisy przycisków, zakładki), przejścia między widokami i błędy strony / bazy, z wersją panelu i urządzeniem. Bez treści wpisywanej w pola i bez treści czatu. Filtr „tylko błędy”, zakres do 30 dni, eksport CSV. Logi starsze niż 30 dni kasują się co noc.
 - **Podgląd** (lewe menu, tylko Administrator): panel tak, jak widzi go wybrana rola (Pielęgniarka — na przykładzie wybranej karty) albo konkretna osoba; tylko do odczytu. Zlecenia i stawki z tych samych zapytań co panel pielęgniarki.
@@ -64,7 +64,7 @@ Pielęgniarka widzi tylko siebie i własne zlecenia (bez ceny dla klienta i mar�
 
 ## Testy
 
-`supabase/test/` — opis w `supabase/test/e2e/README.md`. Wynik 26.10.2026: reguły bazy 218/218, interfejs 102/102.
+`supabase/test/` — opis w `supabase/test/e2e/README.md`. Wynik 26.10.2026: reguły bazy 223/223, interfejs 102/102.
 
 ## Rozstrzygnięcia tam, gdzie projekt milczy (do potwierdzenia albo zmiany)
 

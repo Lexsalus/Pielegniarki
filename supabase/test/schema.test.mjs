@@ -431,3 +431,11 @@ R(!(await cs('nowak')).contacts.find(c=>c.user_id===U.admin).device&&!(await as(
 await as('admin',`select public.set_my_status('online')`);
 await as('nowak',`select public.presence_ping('ping')`);
 R((await as('admin',`select device from public.active_users() where user_id=$1`,[U.nowak])).rows[0].device==='phone|Chrome / Android · aplikacja','Urządzenie: sygnał bez urządzenia nie kasuje ostatniego');
+// --- Wylogowanie natychmiast (migracja 013)
+const asIat=async(who,iat,sql,params=[])=>{await db.exec('set role authenticated');await db.query(`select set_config('request.jwt.claim.sub',$1,false), set_config('request.jwt.claims',$2,false)`,[U[who],JSON.stringify({aal:'aal2',iat})]);try{return await db.query(sql,params)}finally{await db.exec('reset role')}};
+const t0=Math.floor(Date.now()/1000)-60;await db.query(`update public.profiles set sessions_revoked_at=null where id=$1`,[U.nowak]);
+R((await asIat('nowak',t0,`select * from public.my_orders()`)).rows.length>=1,'013: przed wylogowaniem przepustka działa');
+await as('admin',`select public.client_command($1,'logout')`,[U.nowak]);
+R((await asIat('nowak',t0,`select * from public.my_orders()`)).rows.length===0&&(await asIat('nowak',t0,`select public.chat_state() v`)).rows[0].v.contacts.length===0,'013: stara przepustka odrzucona od razu (zlecenia, czat)');
+R((await asIat('nowak',Math.floor(Date.now()/1000)+5,`select * from public.my_orders()`)).rows.length>=1,'013: nowe logowanie działa');
+R((await as('admin',`select * from public.active_users()`)).rows.length>=3,'013: inni pracują normalnie');

@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.8.2] — 2026-10-27
+- ⏏ Wyloguj działa natychmiast, także na starych wersjach panelu (migracja 013)
+
 ## [1.8.1] — 2026-10-26
 - Logi: kolumna „Wersja” przy każdym wpisie i lista wersji, na których pracowała osoba
 

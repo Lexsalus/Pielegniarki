@@ -1,6 +1,6 @@
 {
-  "version": "1.8.1",
-  "date": "2026-10-26",
-  "notes": "Logi: kolumna „Wersja” przy każdym wpisie i lista wersji, na których pracowała osoba",
+  "version": "1.8.2",
+  "date": "2026-10-27",
+  "notes": "⏏ Wyloguj działa natychmiast, także na starych wersjach panelu (migracja 013)",
   "relogin": false
 }
