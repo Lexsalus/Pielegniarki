@@ -1,6 +1,6 @@
 {
-  "version": "1.5.0",
+  "version": "1.5.1",
   "date": "2026-10-26",
-  "notes": "Duże monitory: widoki z mapą i tabelami na całą szerokość, panel przydziału obok mapy (od 1800 px), formularze w czytelnej szerokości; telefon pionowo: przyciski (język, motyw, powiadomienia) nad menu",
+  "notes": "Telefon w poziomie: lewy pasek z powrotem po lewej stronie",
   "relogin": false
 }
