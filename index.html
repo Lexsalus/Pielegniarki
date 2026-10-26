@@ -240,6 +240,7 @@ tr.click{cursor:pointer}tr.click:hover td{background:var(--card2)}
 @supports (-moz-appearance:none){*{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--mut) 45%,transparent) transparent}}
 
 /* ===== telefon i wąskie ekrany ===== */
+.lgt td{vertical-align:top;font-size:.82rem}.lgt tr.lgerr td{background:color-mix(in srgb,var(--bad) 10%,transparent)}
 @media(max-width:1500px){.cmdl{display:none}}
 .sidetabs{display:none;flex-direction:column;gap:1px;margin:2px 0 6px 14px;padding-left:8px;border-left:2px solid var(--line)}
 .sidetabs .tab{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;border:0;font-size:.84rem;color:var(--mut);white-space:normal;line-height:1.25}
@@ -482,7 +483,7 @@ async function akLoad(){const box=$('#akBox');if(!box)return;
   const {data,error}=await sb.rpc('active_users');if(!$('#akBox'))return;
   if(error){box.innerHTML=`<div class="empty">Błąd: ${esc(errMsg(error))}</div>`;return}
   const rows=data||[];AKROWS=rows;const on=rows.filter(r=>r.online).length;$('#akSum').textContent=`${on} teraz · ${rows.length} kont aktywnych`;
-  box.innerHTML=rows.length?`<div class="tw"><table><tr><th>Użytkownik</th><th>Rola</th><th>Status</th><th>Zalogowany od</th><th>Ostatnia aktywność</th><th>Polecenia</th></tr>${rows.map(r=>`<tr><td><b>${esc(r.full_name||r.email)}</b><br><small class="mut">${esc(r.email)}</small></td><td>${esc(ROLES[r.role]||r.role)}</td><td>${r.status==='busy'?'<span class="badge b-warn">● Zajęty</span>':r.online?'<span class="badge b-good">● Aktywny teraz</span>':r.logout_at?'<span class="badge">Wylogowany</span>':'<span class="badge">Nieaktywny</span>'}</td><td>${r.online?dt(r.login_at):'—'}</td><td>${r.logout_at?'wylogowanie '+ago(r.logout_at):ago(r.last_seen)}</td><td style="white-space:nowrap">${r.user_id===ME.id?'<span class="mut small">to Ty</span>':cmdBtns("'"+r.user_id+"'")}</td></tr>`).join('')}</table></div>`:'<div class="empty">Brak kont</div>'}
+  box.innerHTML=rows.length?`<div class="tw"><table><tr><th>Użytkownik</th><th>Rola</th><th>Status</th><th>Zalogowany od</th><th>Ostatnia aktywność</th><th>Polecenia</th></tr>${rows.map(r=>`<tr><td><b>${esc(r.full_name||r.email)}</b><br><small class="mut">${esc(r.email)}</small></td><td>${esc(ROLES[r.role]||r.role)}</td><td>${r.status==='busy'?'<span class="badge b-warn">● Zajęty</span>':r.online?'<span class="badge b-good">● Aktywny teraz</span>':r.logout_at?'<span class="badge">Wylogowany</span>':'<span class="badge">Nieaktywny</span>'}</td><td>${r.online?dt(r.login_at):'—'}</td><td>${r.logout_at?'wylogowanie '+ago(r.logout_at):ago(r.last_seen)}</td><td style="white-space:nowrap"><button class="btn sm" type="button" data-tip="Logi: co ta osoba klikała, przejścia między widokami i błędy (30 dni)" onclick="logView('${r.user_id}')">📋 <span class="cmdl">Logi</span></button> ${r.user_id===ME.id?'<span class="mut small">to Ty</span>':cmdBtns("'"+r.user_id+"'")}</td></tr>`).join('')}</table></div>`:'<div class="empty">Brak kont</div>'}
 setInterval(()=>{if(ME&&location.hash.startsWith('#/aktywni')&&document.visibilityState==='visible')akLoad()},60000);
 
 /* =====================================================================
@@ -615,5 +616,6 @@ setInterval(()=>{if(ME&&Date.now()-idleAt>IDLE_MIN*60000){idleAt=Date.now();$('#
 </script>
 <script src="pielegniarki.js"></script>
 <script src="czat.js"></script>
+<script src="logi.js"></script>
 </body>
 </html>

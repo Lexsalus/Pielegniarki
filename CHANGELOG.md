@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.7.0] — 2026-10-26
+- Logi działań użytkowników (kliknięcia, widoki, błędy; bez treści pól i czatu) — podgląd 📋 przy osobie w „Aktywni”, filtr błędów, eksport CSV, przechowywanie 30 dni (migracja 012)
+
 ## [1.6.0] — 2026-10-26
 - Aktywni: polecenia Administratora — prośba o odświeżenie (Tak / Nie), wymuszone odświeżenie i wylogowanie (z dwoma dodatkowymi potwierdzeniami), dla wybranej osoby albo wszystkich (migracja 011)
 

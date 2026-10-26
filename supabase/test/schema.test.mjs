@@ -411,3 +411,12 @@ R((await db.query(`select count(*)::int n from public.audit_log where action lik
 const nAll=(await as('admin',`select public.client_command_all('ask_reload') n`)).rows[0].n;
 R(nAll>=5&&(await as('kowal',`select * from public.my_commands()`)).rows.length===1&&(await db.query(`select count(*)::int n from public.client_commands where target_user=$1 and kind='ask_reload' and created_at>now()-interval '1 minute' and done_at is null`,[U.admin])).rows[0].n===0,'Polecenia do wszystkich: każdy oprócz nadawcy');
 R(!!await fails('nowak',`select public.client_command_all('logout')`),'Polecenia do wszystkich: tylko Administrator');
+// --- Logi działań (migracja 012)
+const lb=JSON.stringify([{kind:'click',label:'Zapisz',view:'#/pielegniarki'},{kind:'error',label:'Błąd X',detail:'stack'},{kind:'hack',label:'x'.repeat(500)}]);
+R((await as('nowak',`select public.log_batch($1::jsonb) n`,[lb])).rows[0].n===3,'Logi: zapis paczki');
+const lg=(await as('admin',`select * from public.user_logs_for($1,24,false)`,[U.nowak])).rows;
+R(lg.length===3&&lg.every(x=>x.user_id===U.nowak)&&lg.some(x=>x.kind==='info'&&x.label.length===300),'Logi: tylko własne wpisy, typ i długość pilnowane');
+R((await as('admin',`select * from public.user_logs_for($1,24,true)`,[U.nowak])).rows.length===1,'Logi: filtr „tylko błędy”');
+R((await as('nowak',`select * from public.user_logs_for($1,24,false)`,[U.nowak])).rows.length===0&&(await as('nowak',`select * from public.user_logs`)).rows.length===0,'Logi: czyta tylko Administrator');
+R(!!await fails('nowak',`insert into public.user_logs(user_id,kind) values($1,'click')`,[U.admin]),'Logi: bez bezpośredniego zapisu');
+R((await as('nowak',`select public.log_batch($1::jsonb) n`,[JSON.stringify(Array.from({length:250},()=>({kind:'click'})))])).rows[0].n===200,'Logi: maks. 200 wpisów w paczce');

@@ -141,6 +141,10 @@ const I18N_ROWS=[
 ['Ostatnie potwierdzenie:','Останнє підтвердження:','Final confirmation:'],['wylogowanie','вихід','sign-out'],['wymuszone odświeżenie','примусове оновлення','forced refresh'],
 ['Prośba o odświeżenie','Прохання оновити','Refresh request'],['Administrator prosi o odświeżenie panelu (np. po aktualizacji). Odświeżyć teraz?','Адміністратор просить оновити панель (напр. після оновлення). Оновити зараз?','The Administrator asks you to refresh the panel (e.g. after an update). Refresh now?'],
 ['Tak, odśwież','Так, оновити','Yes, refresh'],['Nie, później','Ні, пізніше','No, later'],['Administrator odświeża panel…','Адміністратор оновлює панель…','The Administrator is refreshing the panel…'],['Administrator wylogował Cię z panelu','Адміністратор вивів вас із панелі','The Administrator signed you out of the panel'],
+['Logi','Журнал','Logs'],['Logi:','Журнал:','Logs:'],['Logi: co ta osoba klikała, przejścia między widokami i błędy (30 dni)','Журнал: що ця особа натискала, переходи між видами і помилки (30 днів)','Logs: what this person clicked, view changes and errors (30 days)'],
+['ostatnia godzina','остання година','last hour'],['24 godziny','24 години','24 hours'],['7 dni','7 днів','7 days'],['30 dni','30 днів','30 days'],['tylko błędy','лише помилки','errors only'],
+['Czas','Час','Time'],['Rodzaj','Вид','Type'],['Co','Що','What'],['Widok','Вигляд','View'],['Szczegóły','Деталі','Details'],['Kliknięcie','Натискання','Click'],['Info','Інфо','Info'],
+['{n} wpisów','{n} записів','{n} entries'],['{n} błędów','{n} помилок','{n} errors'],['najnowsze na górze','найновіші вгорі','newest first'],['Brak wpisów w tym okresie','Немає записів за цей період','No entries in this period'],
 // --- role
 ['Administrator','Адміністратор','Administrator'],
 ['Pełnomocnik','Повірений','Attorney'],
