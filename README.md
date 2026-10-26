@@ -38,7 +38,7 @@ Pielęgniarka widzi tylko siebie i własne zlecenia (bez ceny dla klienta i mar�
 
 ## Testy
 
-`supabase/test/` — opis w `supabase/test/e2e/README.md`. Wynik 26.10.2026: reguły bazy 131/131, interfejs 50/50.
+`supabase/test/` — opis w `supabase/test/e2e/README.md`. Wynik 26.10.2026: reguły bazy 132/132, interfejs 50/50.
 
 ## Rozstrzygnięcia tam, gdzie projekt milczy (do potwierdzenia albo zmiany)
 
