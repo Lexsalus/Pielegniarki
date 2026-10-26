@@ -68,7 +68,7 @@ async def main():
     await login('nowak@k.test')
     m=await pg.eval_on_selector_all('#side a.nav','e=>e.map(x=>x.innerText)')
     ok(any('Pielęgniarki' in x for x in m) and not any(k in ' '.join(m) for k in ['Sprawy','Pulpit','Zespół','Finanse']),'pielęgniarka: tylko własny panel w menu (bez spraw kancelarii)')
-    ok('Anna Nowak' in await T('#view') and 'Moje zlecenia' in await T('#view'),'pielęgniarka po zalogowaniu trafia do swojego panelu')
+    ok('Anna Nowak' in await T('#view') and 'Moje zlecenia' in await T('main'),'pielęgniarka po zalogowaniu trafia do swojego panelu')
     await nav('#/sprawy'); ok(await pg.is_visible('.forbid') or 'Brak' in await T('#view'),'pielęgniarka: sprawy kancelarii niedostępne')
     await nav('#/pielegniarki/obszar',1300)
     paths=pg.locator('#nzedmap path.leaflet-interactive'); n_=await paths.count()

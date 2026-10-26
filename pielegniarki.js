@@ -207,16 +207,18 @@ async function roadKm(lat,lng,ids){
    ===================================================================== */
 const NZ_TABS=[['','Widok główny'],['zlecenia','Zlecenia'],['dostepnosc','Dostępność w mieście'],['oczekujacy','Lista oczekujących'],['ustawienia','Ustawienia']];
 const NZ_NTABS=[['','Moje zlecenia'],['obszar','Mój obszar'],['terminarz','Dostępność'],['stawki','Stawki']];
+const setTop=h=>{const t=$('#nzTop');if(t)t.innerHTML=h};
 ROUTES.pielegniarki=(sub='',id)=>{
+  setTop('');
   need(can('nurses'),'Zakładka Pielęgniarki wymaga uprawnienia „Pielęgniarki”.');
   if(NZ.missing)return `<div class="ph"><div><h1>Pielęgniarki</h1></div></div><div class="note">Baza nie ma jeszcze tabel tej zakładki. Uruchom migrację <code>supabase/migrations/004_pielegniarki.sql</code> w Supabase SQL Editor (opis w SUPABASE.md).</div>`;
   if(!NZ.D)return `<div class="empty">Wczytywanie…</div>`;
   if(isNurse())return nurseView(sub);
   const pend=NZ.D.orders.filter(o=>o.status==='nowe'&&o.needs_dispatcher).length;
-  const tabs=`<div class="tabs">${NZ_TABS.map(([k,l])=>`<a class="tab ${k===sub||(k===''&&['obszar','terminarz','dzielnica'].includes(sub))?'on':''}" href="#/pielegniarki${k?'/'+k:''}">${l}${k==='zlecenia'&&pend?` <span class="badge b-bad">${pend}</span>`:''}${k==='oczekujacy'&&NZ.D.waitlist.filter(w=>!w.resolved_at).length?` <span class="badge">${NZ.D.waitlist.filter(w=>!w.resolved_at).length}</span>`:''}</a>`).join('')}</div>`;
+  setTop(`${NZ_TABS.map(([k,l])=>`<a class="tab ${k===sub||(k===''&&['obszar','terminarz','dzielnica'].includes(sub))?'on':''}" href="#/pielegniarki${k?'/'+k:''}">${l}${k==='zlecenia'&&pend?` <span class="badge b-bad">${pend}</span>`:''}${k==='oczekujacy'&&NZ.D.waitlist.filter(w=>!w.resolved_at).length?` <span class="badge">${NZ.D.waitlist.filter(w=>!w.resolved_at).length}</span>`:''}</a>`).join('')}`);
   const V={'':mainView,zlecenia:ordersView,dostepnosc:cityAvailView,oczekujacy:waitView,ustawienia:settingsView,obszar:()=>areaEditor(id),terminarz:()=>calendarView(id),dzielnica:districtEditor}[sub];
   need(V,'Nie ma takiej strony');
-  return tabs+V(id);
+  return V(id);
 };
 ROUTES.pielegniarki.after=(sub='',id)=>{
   if(!NZ.D||NZ.missing)return;
@@ -746,17 +748,17 @@ function deSave(){const city=$('#decity').value.trim(),name=$('#dename').value.t
 function nurseView(sub){
   const n=NZ.D.me;
   if(!n)return `<div class="ph"><div><h1>Panel pielęgniarki</h1></div></div><div class="note">Twoje konto nie jest jeszcze powiązane z kartą pielęgniarki. Poproś Administratora o powiązanie (Pielęgniarki → karta → Dane i usługi → Konto).</div>`;
-  const tabs=`<div class="tabs">${NZ_NTABS.map(([k,l])=>`<a class="tab ${k===sub?'on':''}" href="#/pielegniarki${k?'/'+k:''}">${l}${k===''&&NZ.D.myOrders.filter(o=>o.status==='zaproponowane').length?` <span class="badge b-bad">${NZ.D.myOrders.filter(o=>o.status==='zaproponowane').length}</span>`:''}</a>`).join('')}</div>`;
+  setTop(`${NZ_NTABS.map(([k,l])=>`<a class="tab ${k===sub?'on':''}" href="#/pielegniarki${k?'/'+k:''}">${l}${k===''&&NZ.D.myOrders.filter(o=>o.status==='zaproponowane').length?` <span class="badge b-bad">${NZ.D.myOrders.filter(o=>o.status==='zaproponowane').length}</span>`:''}</a>`).join('')}`);
   const head=`<div class="ph"><div><h1 style="display:flex;gap:10px;align-items:center">${nAv(n,36)} ${esc(n.full_name)} <span class="badge ${NSTB[n.status]}">${NST[n.status]}</span></h1><p>${esc(n.city)} · ${esc(areaTxt(n.id))}</p></div></div>`;
-  if(sub==='obszar')return tabs+areaEditor(n.id);
-  if(sub==='terminarz')return head+tabs+`<div class="grid" style="grid-template-columns:minmax(0,1fr) 340px;align-items:start"><div class="card">${weekGrid(n.id)}</div><div class="card">${patternsBlock(n.id)}</div></div>`;
-  if(sub==='stawki')return head+tabs+`<div class="card" style="max-width:620px"><h3>Moje stawki za dojazd</h3><div class="tw"><table><tr><th>Strefa</th><th>Odległość od punktu bazowego</th><th>Wypłata</th></tr>${NZ.D.myRates.map(z=>`<tr><td>${z.zone_no}</td><td>${z.km_from}–${z.km_to} km</td><td><b>${money(z.payout)}</b></td></tr>`).join('')||'<tr><td colspan="3" class="mut">Brak cennika — skontaktuj się z Administratorem.</td></tr>'}</table></div>
+  if(sub==='obszar')return areaEditor(n.id);
+  if(sub==='terminarz')return head+`<div class="grid" style="grid-template-columns:minmax(0,1fr) 340px;align-items:start"><div class="card">${weekGrid(n.id)}</div><div class="card">${patternsBlock(n.id)}</div></div>`;
+  if(sub==='stawki')return head+`<div class="card" style="max-width:620px"><h3>Moje stawki za dojazd</h3><div class="tw"><table><tr><th>Strefa</th><th>Odległość od punktu bazowego</th><th>Wypłata</th></tr>${NZ.D.myRates.map(z=>`<tr><td>${z.zone_no}</td><td>${z.km_from}–${z.km_to} km</td><td><b>${money(z.payout)}</b></td></tr>`).join('')||'<tr><td colspan="3" class="mut">Brak cennika — skontaktuj się z Administratorem.</td></tr>'}</table></div>
     <p class="hint">Punkt bazowy: ${esc(n.base_label||'—')}. Kwota zapisuje się w zleceniu w chwili przydziału.</p></div>`;
   const P=NZ.D.myOrders.filter(o=>o.status==='zaproponowane'),A=NZ.D.myOrders.filter(o=>['przyjete','w_drodze'].includes(o.status)),D=NZ.D.myOrders.filter(o=>['wykonane','rozliczone'].includes(o.status)).slice(-10).reverse();
   const card=(o,act)=>`<div class="entry" style="border-left:3px solid ${o.status==='zaproponowane'?'var(--warn)':'var(--accent)'}"><div class="eh"><b>#${o.number} · ${esc(o.service)} · ${fSlot(o.start_at)}</b><span class="badge ${OSTB[o.status]}">${OST[o.status]}</span></div>
     <div class="small" style="margin-top:4px">${esc(o.address)}${o.status!=='zaproponowane'?' · '+esc(o.client_name)+' '+esc(o.client_phone):''}</div>
     <div class="small mut">${o.zone_no?`Strefa ${o.zone_no} (${o.distance_km} km) · dojazd: ${money(o.payout_travel)}`:''}${o.note?' · '+esc(o.note):''}</div>${act}</div>`;
-  return head+tabs+`<div class="grid g2" style="align-items:start"><div><h3 style="margin-bottom:10px">Do akceptacji</h3>${P.map(o=>card(o,`<div class="ea"><button class="btn pri sm" onclick="nsafe(async()=>chk(await sb.rpc('respond_order',{p_order:'${o.id}',p_accept:true})),'Zlecenie przyjęte')">Przyjmij</button><button class="btn sm del" onclick="if(confirm('Odrzucić? Zlecenie trafi do następnej osoby.'))nsafe(async()=>chk(await sb.rpc('respond_order',{p_order:'${o.id}',p_accept:false})),'Odrzucono')">Odrzuć</button><span class="small mut" style="align-self:center">pozostało <b data-exp="${o.expires_at}"></b></span></div>`)).join('')||'<div class="empty">Brak nowych propozycji</div>'}
+  return head+`<div class="grid g2" style="align-items:start"><div><h3 style="margin-bottom:10px">Do akceptacji</h3>${P.map(o=>card(o,`<div class="ea"><button class="btn pri sm" onclick="nsafe(async()=>chk(await sb.rpc('respond_order',{p_order:'${o.id}',p_accept:true})),'Zlecenie przyjęte')">Przyjmij</button><button class="btn sm del" onclick="if(confirm('Odrzucić? Zlecenie trafi do następnej osoby.'))nsafe(async()=>chk(await sb.rpc('respond_order',{p_order:'${o.id}',p_accept:false})),'Odrzucono')">Odrzuć</button><span class="small mut" style="align-self:center">pozostało <b data-exp="${o.expires_at}"></b></span></div>`)).join('')||'<div class="empty">Brak nowych propozycji</div>'}
       <h3 style="margin:16px 0 10px">Ostatnio wykonane</h3>${D.map(o=>card(o,'')).join('')||'<div class="mut small">—</div>'}</div>
     <div><h3 style="margin-bottom:10px">Zaplanowane wizyty</h3>${A.map(o=>card(o,`<div class="ea">${o.status==='przyjete'?`<button class="btn sm" onclick="advOrder('${o.id}','w_drodze')">W drodze</button>`:''}<button class="btn sm pri" onclick="advOrder('${o.id}','wykonane')">Wykonane</button><a class="btn sm" target="_blank" href="https://www.openstreetmap.org/?mlat=${o.lat}&mlon=${o.lng}#map=17/${o.lat}/${o.lng}">Mapa</a></div>`)).join('')||'<div class="empty">Brak zaplanowanych wizyt</div>'}</div></div>
     <p class="hint">Każde zlecenie trzeba przyjąć w wyznaczonym czasie — po nim trafia do następnej osoby. Widzisz tylko własne zlecenia.</p>`;
