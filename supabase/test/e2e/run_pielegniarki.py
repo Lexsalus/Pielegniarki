@@ -11,7 +11,7 @@ sq=lambda a1,o1,a2,o2: json.dumps([[[a1,o1],[a1,o2],[a2,o2],[a2,o1]]])
 async def main():
   sql("insert into public.districts(city,name,rings) values('Testowo','Północ',$1),('Testowo','Południe',$2) on conflict do nothing",[sq(52.05,21.0,52.1,21.1),sq(52.0,21.0,52.05,21.1)])
   async with async_playwright() as p:
-    b=await p.chromium.launch(); c=await b.new_context(locale='pl-PL',viewport={'width':1440,'height':950},timezone_id='Europe/Warsaw'); errs=[]
+    b=await p.chromium.launch(); c=await b.new_context(locale='pl-PL',viewport={'width':1440,'height':950},timezone_id='Europe/Warsaw',service_workers='block'); errs=[]
     async def rt(r):
       u=r.request.url
       if 'supabase-js' in u: return await r.fulfill(path=SH,content_type='application/javascript')
@@ -36,6 +36,12 @@ async def main():
     toast=lambda: T('#toast')
     # --- Administrator: menu, usługa, pielęgniarki
     await pg.goto(U); await pg.wait_for_timeout(600)
+    mf=json.loads(urllib.request.urlopen(U.rsplit('/',1)[0]+'/manifest.webmanifest').read())
+    ok(mf['display']=='standalone' and len(mf['icons'])>=2 and await pg.get_attribute('link[rel=manifest]','href')=='manifest.webmanifest','PWA: plik aplikacji z ikonami')
+    ok(await pg.is_visible('.lgtop .pwabtn'),'PWA: przycisk „Zainstaluj aplikację” na ekranie logowania')
+    await pg.click('.lgtop .pwabtn'); await pg.wait_for_timeout(300); ok('ekranu' in await T('#mbox'),'PWA: bez okna przeglądarki → instrukcja instalacji'); await pg.click('#mbox [data-x] >> nth=0')
+    c2=await b.new_context(); p2=await c2.new_page(); await p2.route('**/*',rt); await p2.goto(U); 
+    sw=await p2.evaluate("navigator.serviceWorker.ready.then(r=>r.active?.scriptURL||r.installing?.scriptURL||'')"); ok(sw.endswith('sw.js'),'PWA: skrypt w tle zarejestrowany'); await c2.close()
     th0=await pg.evaluate('document.documentElement.dataset.theme||""')
     await pg.click('.lgtop .lng[data-lang=uk]'); await pg.click('.lgtop .themebtn'); await pg.wait_for_timeout(300)
     ok('Увійти' in await T('#login') and await pg.evaluate('document.documentElement.dataset.theme||""')!=th0,'ekran logowania: język i motyw na górze')

@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Panel pielęgniarek</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b0d14">
+<link rel="icon" type="image/png" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pielęgniarki">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
 <script src="i18n.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -192,16 +199,19 @@ tr.click{cursor:pointer}tr.click:hover td{background:var(--card2)}
 .lng:hover{color:var(--txt)}.lng.on{background:var(--card2);color:var(--txt)}
 .lgtop{position:fixed;top:14px;right:16px;z-index:5;display:flex;gap:8px;align-items:center}
 @media(max-width:760px){.lng span{display:none}}
+.pwabtn[hidden]{display:none!important}
+@media(max-width:1100px){.me .pwalbl{display:none}}
 </style>
 </head>
 <body>
-<div id="login"><div class="lgtop"><div class="langsw-slot"></div><button class="icon-btn themebtn" type="button" data-tip="Motyw jasny / ciemny">🌓</button></div><div class="lbox"></div></div>
+<div id="login"><div class="lgtop"><button class="btn sm pwabtn" type="button" hidden data-tip="Dodaj panel do ekranu telefonu lub komputera — otwiera się jak aplikacja, bez paska przeglądarki.">📲 Zainstaluj aplikację</button><div class="langsw-slot"></div><button class="icon-btn themebtn" type="button" data-tip="Motyw jasny / ciemny">🌓</button></div><div class="lbox"></div></div>
 <div id="app">
   <aside id="side"></aside>
   <main>
     <div class="top">
       <nav class="tabs nztop" id="nzTop"></nav>
       <div class="me">
+        <button class="btn sm pwabtn" type="button" hidden data-tip="Dodaj panel do ekranu telefonu lub komputera — otwiera się jak aplikacja, bez paska przeglądarki.">📲 <span class="pwalbl">Zainstaluj aplikację</span></button>
         <div class="langsw-slot"></div>
         <button class="icon-btn themebtn" id="theme" data-tip="Motyw jasny / ciemny">🌓</button>
         <div style="position:relative"><button class="icon-btn" id="bell" data-tip="Powiadomienia: propozycje zleceń, zlecenia dla dyspozytora, zmiany do zatwierdzenia">🔔</button><div class="sres" id="ntBox" style="right:0;left:auto;width:min(380px,90vw);max-height:70vh;overflow:auto;top:44px"></div></div>
@@ -274,6 +284,23 @@ const hlp=t=>`<span class="hlp" tabindex="0" data-tip="${esc(t)}">?</span>`;
  document.addEventListener('focusin',e=>{const el=e.target.closest?.('[data-tip]:not([data-tip=""])');el?show(el):hide()});
  document.addEventListener('focusout',hide);addEventListener('scroll',hide,true);document.addEventListener('click',e=>{if(!e.target.closest?.('.hlp'))hide()});
  document.addEventListener('keydown',e=>{if(e.key==='Escape')hide()});}
+
+/* --- aplikacja (PWA): przycisk „Zainstaluj aplikację” --- */
+if('serviceWorker' in navigator&&location.protocol!=='file:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(e=>console.warn('sw',e)));
+let pwaPrompt=null;
+const pwaInstalled=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const pwaIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const pwaShow=()=>$$('.pwabtn').forEach(b=>b.hidden=pwaInstalled());
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();pwaPrompt=e;pwaShow()});
+addEventListener('appinstalled',()=>{pwaPrompt=null;pwaShow();toast('Aplikacja zainstalowana')});
+document.addEventListener('click',async e=>{if(!e.target.closest?.('.pwabtn'))return;
+  if(pwaPrompt){const p=pwaPrompt;pwaPrompt=null;p.prompt();try{await p.userChoice}catch(x){}pwaShow();return}
+  const ios=pwaIOS();
+  modal('Zainstaluj aplikację',`<div class="note" style="line-height:1.6">${ios
+    ?`<p>Na iPhonie / iPadzie (Safari):</p><p>1. Stuknij <b>Udostępnij</b> (kwadrat ze strzałką w górę).</p><p>2. Wybierz <b>Do ekranu początkowego</b>.</p><p>3. Stuknij <b>Dodaj</b>.</p>`
+    :`<p>Przeglądarka nie pokazała okna instalacji. Spróbuj tak:</p><p>Android (Chrome): menu <b>⋮</b> → <b>Zainstaluj aplikację</b> albo <b>Dodaj do ekranu głównego</b>.</p><p>Komputer (Chrome / Edge): ikona instalacji na końcu paska adresu albo menu → <b>Zainstaluj</b>.</p>`}</div>`,{ok:'',cancel:'Zamknij'});
+});
+addEventListener('DOMContentLoaded',pwaShow);
 /* --- menu i router --- */
 function renderShell(){
   const cnt=typeof nzBadge==='function'?nzBadge():0;

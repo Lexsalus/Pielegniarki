@@ -9,4 +9,4 @@ node e2e/server.mjs &                      # lokalna baza: http://localhost:9900
 (cd ../.. && python3 -m http.server 8766 &)  # panel z katalogu głównego repo
 python3 e2e/run_pielegniarki.py            # wymaga: pip install playwright
 ```
-Konta (fikcyjne, tylko lokalnie; hasło `Haslo-testowe-123`, kod 2FA `123456`): admin@k.test, nowak@k.test, kowal@k.test. Wynik 26.10.2026: 65/65.
+Konta (fikcyjne, tylko lokalnie; hasło `Haslo-testowe-123`, kod 2FA `123456`): admin@k.test, nowak@k.test, kowal@k.test. Wynik 26.10.2026: 69/69.
