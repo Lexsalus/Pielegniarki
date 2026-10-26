@@ -73,6 +73,7 @@ const I18N_ROWS=[
 ['Dodaj do ekranu głównego','Додати на головний екран','Add to Home screen'],
 ['Komputer (Chrome / Edge): ikona instalacji na końcu paska adresu albo menu →','Комп’ютер (Chrome / Edge): значок встановлення в кінці адресного рядка або меню →','Computer (Chrome / Edge): the install icon at the end of the address bar or menu →'],
 ['Zainstaluj','Встановити','Install'],
+['Satelita','Супутник','Satellite'],
 // --- role
 ['Administrator','Адміністратор','Administrator'],
 ['Pełnomocnik','Повірений','Attorney'],

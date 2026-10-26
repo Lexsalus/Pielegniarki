@@ -164,7 +164,9 @@ async function makeMap(el,{view,onClick,onMove}={}){
   if(!el.isConnected)return null;
   const v=view||{c:[52.2297,21.0122],z:11};
   if(kind==='leaflet'){
-    const m=L.map(el).setView(v.c,v.z);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(m);
+    const m=L.map(el).setView(v.c,v.z);const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(m);
+    const sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Zdjęcia &copy; Esri, Maxar, Earthstar Geographics'});
+    L.control.layers({'Mapa':osm,'Satelita':sat},null,{collapsed:false,position:'topright'}).addTo(m);
     const g=L.layerGroup().addTo(m);if(onClick)m.on('click',e=>onClick(e.latlng.lat,e.latlng.lng));if(onMove)m.on('moveend',()=>onMove({c:[m.getCenter().lat,m.getCenter().lng],z:m.getZoom()}));
     const ev=(l,o)=>{if(o.title)l.bindTooltip(o.title,{sticky:true});if(o.onClick)l.on('click',e=>{L.DomEvent.stopPropagation(e);o.onClick(e.latlng.lat,e.latlng.lng)});return l};
     return {kind,clear:()=>g.clearLayers(),
@@ -175,7 +177,7 @@ async function makeMap(el,{view,onClick,onMove}={}){
       fit:pts=>{if(pts.length)m.fitBounds(pts,{padding:[24,24],maxZoom:13})},
       view:()=>({c:[m.getCenter().lat,m.getCenter().lng],z:m.getZoom()}),destroy:()=>m.remove()};
   }
-  const G=google.maps,m=new G.Map(el,{center:{lat:v.c[0],lng:v.c[1]},zoom:v.z,mapTypeControl:false,streetViewControl:false});let ov=[];
+  const G=google.maps,m=new G.Map(el,{center:{lat:v.c[0],lng:v.c[1]},zoom:v.z,mapTypeControl:true,mapTypeControlOptions:{mapTypeIds:['roadmap','hybrid'],style:G.MapTypeControlStyle.HORIZONTAL_BAR},streetViewControl:false});let ov=[];
   const P=([a,b])=>({lat:+a,lng:+b});if(onClick)m.addListener('click',e=>onClick(e.latLng.lat(),e.latLng.lng()));if(onMove)m.addListener('idle',()=>onMove({c:[m.getCenter().lat(),m.getCenter().lng()],z:m.getZoom()}));
   const ev=(x,o)=>{if(o.onClick)x.addListener('click',e=>o.onClick(e.latLng.lat(),e.latLng.lng()));if(o.title)x.setOptions({title:o.title});ov.push(x);return x};
   return {kind,clear:()=>{ov.forEach(x=>x.setMap(null));ov=[]},
