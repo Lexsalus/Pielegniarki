@@ -284,3 +284,14 @@ R(!ak.online&&ak.logout_at,'Aktywni: wylogowanie → nieaktywny');
 await db.exec(`update public.user_presence set last_seen=now()-interval '5 minutes' where user_id='${U.admin}'`);
 AAL='aal1';await as('admin',`select public.presence_ping('ping')`);AAL='aal2';
 R(!(await as('admin',`select * from public.active_users()`)).rows.find(r=>r.user_id===U.admin).online,'Aktywni: sesja Administratora bez 2FA nie liczy się');
+// --- Podgląd jako osoba / rola (migracja 005)
+let pv=(await as('admin',`select public.preview_panel(p_user=>$1) v`,[U.nowak])).rows[0].v;
+const mine=(await as('nowak',`select id from public.my_orders()`)).rows.map(r=>r.id).sort().join();
+R(pv.role==='nurse'&&pv.level===1&&pv.nurse_id===N.nowak&&pv.orders.map(o=>o.id).sort().join()===mine&&mine.length>0,'Podgląd osoby: te same zlecenia co w panelu pielęgniarki');
+{const a=pv.rates.map(r=>[r.zone_no,+r.km_from,+r.km_to,+r.payout].join()).join(";"),b=(await as("nowak",`select * from public.my_rates()`)).rows.map(r=>[r.zone_no,+r.km_from,+r.km_to,+r.payout].join()).join(";");R(a===b&&a.length>0,'Podgląd osoby: te same stawki: '+a)}
+pv=(await as('admin',`select public.preview_panel(p_role=>'nurse',p_nurse=>$1) v`,[N.kowal])).rows[0].v;
+R(pv.nurse_id===N.kowal&&pv.level===1,'Podgląd roli: Pielęgniarka na przykładzie wybranej karty');
+pv=(await as('admin',`select public.preview_panel(p_role=>'office') v`)).rows[0].v;
+R(pv.level===0&&pv.orders.length===0,'Podgląd roli: Biuro — brak dostępu');
+R(!!await fails('nowak',`select public.preview_panel(p_user=>$1)`,[U.admin])&&!!await fails('jan',`select public.preview_panel(p_role=>'nurse')`),'Podgląd: tylko Administrator');
+R(!!await fails('admin',`select app.orders_for($1)`,[N.nowak]),'Podgląd: funkcje pomocnicze niedostępne bezpośrednio');

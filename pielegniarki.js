@@ -21,7 +21,7 @@ const isoDow=d=>((d.getDay()+6)%7)+1;
 const fDay=d=>`${DOW[d.getDay()].slice(0,3)}. ${pad(d.getDate())}.${pad(d.getMonth()+1)}`;
 const fSlot=s=>{const d=new Date(s);return `${fDay(d)}, ${d.getHours()}:${pad(d.getMinutes())}`};
 const nAdmin=()=>permLevel('nurses')===2;
-const isNurse=()=>ME?.role==='nurse';
+const isNurse=()=>NZ.pv?NZ.pv.role==='nurse':ME?.role==='nurse';   // w podglądzie: rola oglądanej osoby
 const NN=id=>NZ.D.nurses.find(n=>n.id===id)||{full_name:'—',color:'#64748b',id:''};
 const SV=id=>NZ.D.services.find(s=>s.id===id)||{name:'—'};
 const nIni=n=>initials(n.full_name||'?');
@@ -82,9 +82,9 @@ NZ.load=async()=>{
     districts:R.districts||[],areas:R.nurse_areas||[],patterns:R.nurse_patterns||[],exceptions:R.nurse_exceptions||[],zones:R.price_zones||[],rules:R.assignment_rules||[],pool:R.assignment_pool||[],
     orders:(R.nurse_orders||[]).sort((a,b)=>String(a.start_at).localeCompare(b.start_at)),attempts:R.order_attempts||[],waitlist:R.nurse_waitlist||[],myOrders:[],myRates:[]};
   D.districts.forEach(d=>{d.c=centroid(d.rings)});
-  if(isNurse()){D.me=D.nurses[0]||null;
+  if(ME.role==='nurse'){D.me=D.nurses[0]||null;
     const [o,r]=await Promise.all([sb.rpc('my_orders'),sb.rpc('my_rates')]);D.myOrders=o.data||[];D.myRates=r.data||[];}
-  NZ.D=D;
+  NZ.D=D;NZ.A=D;NZ.pv=null;
 };
 {const base=reload;reload=async()=>{await base();try{await NZ.load()}catch(e){console.error(e)}}}
 const nact=(fn,msg)=>act(fn,msg);
@@ -228,7 +228,7 @@ ROUTES.pielegniarki.after=(sub='',id)=>{
   if(!NZ.ticked){NZ.ticked=1;sb.rpc('nurse_tick').then(r=>{if(r.data>0)reload().then(rerender)})}
 };
 function tickCountdowns(){
-  if(!location.hash.startsWith('#/pielegniarki')){clearInterval(NZ.timer);return}
+  if(!/^#\/(pielegniarki|podglad)/.test(location.hash)){clearInterval(NZ.timer);return}
   let expired=false;
   $$('[data-exp]').forEach(el=>{const s=Math.round((new Date(el.dataset.exp)-Date.now())/1000);if(s<=0){el.textContent='czas minął';if(!el.dataset.done){el.dataset.done=1;expired=true}}else el.textContent=`${Math.floor(s/60)}:${pad(s%60)}`});
   if(expired)sb.rpc('nurse_tick').then(()=>reload()).then(rerender);
@@ -765,8 +765,10 @@ function nurseView(sub){
 }
 /* licznik w menu: zmiany do zatwierdzenia + zlecenia czekające na dyspozytora / na moją akceptację */
 function nzBadge(){
-  if(!NZ.D)return 0;
-  if(isNurse())return NZ.D.myOrders.filter(o=>o.status==='zaproponowane').length;
+  if(!NZ.A)return 0;const D0=NZ.D;NZ.D=NZ.A;try{return nzBadge0()}finally{NZ.D=D0}
+}
+function nzBadge0(){
+  if(ME.role==='nurse')return NZ.D.myOrders.filter(o=>o.status==='zaproponowane').length;
   return NZ.D.orders.filter(o=>o.status==='nowe'&&o.needs_dispatcher).length+NZ.D.nurses.reduce((s,n)=>s+pendingFor(n.id),0);
 }
 /* --- konta: rola i aktywacja (Administrator) --- */
@@ -780,3 +782,43 @@ function accountsCard(){
     <p class="hint">Nowe konto zakłada Administrator w Supabase (Authentication → Users → Add user, Auto Confirm). Pojawi się tu jako nieaktywne — nadaj rolę, zaznacz „Aktywne” i zapisz, potem powiąż z kartą pielęgniarki (karta → Dane i usługi → Konto). W systemie musi zostać co najmniej jeden aktywny Administrator (pilnuje baza); każda zmiana trafia do audytu.</p></div>`;
 }
 const accSave=id=>{const u=DB.users.find(x=>x.id===id),role=$('#acr_'+id).value,active=$('#aca_'+id).checked;if(u.role===role&&!!u.active===active)return toast('Brak zmian');nsafe(async()=>chk(await sb.from('profiles').update({role,active}).eq('id',id)),'Zapisano konto')};
+
+/* =====================================================================
+   PODGLĄD „JAKO ROLA” / „JAKO OSOBA” (Administrator, tylko odczyt)
+   #/podglad — wybór; #/podglad/u.<konto>/<zakładka> lub #/podglad/r.<rola>.<karta>/<zakładka>
+   ===================================================================== */
+function nzLeavePreview(){if(NZ.pv){NZ.pv=null;if(NZ.A)NZ.D=NZ.A}}
+const PV_ROLES=['nurse','admin','att','app','office','tech'];
+ROUTES.podglad=(key)=>{
+  need(ME.role==='admin','Podgląd tylko dla Administratora');nzLeavePreview();
+  if(!NZ.A)return `<div class="empty">Wczytywanie…</div>`;
+  if(!key){const us=DB.users.slice().sort((a,b)=>a.name.localeCompare(b.name,'pl'));
+    return `<div class="ph"><div><h1>Podgląd</h1><p>Panel tak, jak widzi go wybrana rola lub osoba. Tylko do odczytu — nic się nie zapisuje.</p></div></div>
+    <div class="grid g2" style="align-items:start">
+      <div class="card"><h3>Jako rola</h3><div class="form" style="grid-template-columns:1fr;margin-top:10px">
+        <label>Rola<select class="f" id="pvRole" onchange="$('#pvNw').style.display=this.value==='nurse'?'':'none'">${PV_ROLES.map(r=>`<option value="${r}">${esc(ROLES[r]||r)}</option>`).join('')}</select></label>
+        <label id="pvNw">Na przykładzie karty<select class="f" id="pvNurse">${NZ.A.nurses.map(n=>`<option value="${n.id}">${esc(n.full_name)}</option>`).join('')||'<option value="">— brak kart —</option>'}</select></label></div>
+        <div class="mfoot"><button class="btn pri" onclick="location.hash='#/podglad/r.'+$('#pvRole').value+'.'+($('#pvRole').value==='nurse'?$('#pvNurse').value:'')">Pokaż</button></div></div>
+      <div class="card"><h3>Jako osoba</h3><div class="tw"><table style="margin-top:6px"><tr><th>Osoba</th><th>Rola</th><th></th></tr>${us.map(u=>`<tr style="${u.active?'':'opacity:.7'}"><td><b>${esc(u.name)}</b><br><small class="mut">${esc(u.email)}</small></td><td>${esc(ROLES[u.role]||u.role)}${u.active?'':' · nieaktywne'}</td><td><a class="btn sm" href="#/podglad/u.${u.id}">Pokaż</a></td></tr>`).join('')}</table></div></div>
+    </div>`}
+  return `<div id="pvBar"></div><div id="pvBox"><div class="empty">Wczytywanie podglądu…</div></div>`;
+};
+ROUTES.podglad.after=async(key,sub='')=>{
+  if(!key)return;const [k,a,b]=key.split('.');
+  const r=await sb.rpc('preview_panel',k==='u'?{p_user:a}:{p_role:a,p_nurse:b||null});
+  if(!$('#pvBox')||location.hash.split('/')[2]!==key)return;
+  if(r.error){$('#pvBox').innerHTML=`<div class="empty">Błąd: ${esc(errMsg(r.error))}</div>`;return}
+  const P=r.data,A=NZ.A,who=k==='u'?`osoba: <b>${esc(P.name||'')}</b> (${esc(ROLES[P.role]||P.role)})`:`rola: <b>${esc(ROLES[P.role]||P.role)}</b>`+(P.role==='nurse'&&P.nurse_id?` · na przykładzie: <b>${esc(NN(P.nurse_id)?.full_name||'')}</b>`:'');
+  $('#pvBar').innerHTML=`<div class="note" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">👁 Podgląd tylko do odczytu — ${who}<span style="flex:1"></span><a class="btn sm" href="#/podglad">Zmień</a><a class="btn sm" href="#/pielegniarki">Zakończ podgląd</a></div>`;
+  const box=$('#pvBox');box.setAttribute('inert','');
+  if(!P.active){box.innerHTML=`<div class="forbid"><b>🔒</b><h2>Konto nieaktywne</h2><p class="mut">Ta osoba nie może się zalogować, dopóki Administrator nie aktywuje konta.</p></div>`;return}
+  if(!P.level){box.innerHTML=`<div class="forbid"><b>403</b><h2>Brak dostępu</h2><p class="mut">Po zalogowaniu: „Konto nie ma uprawnienia „Pielęgniarki”. Poproś Administratora o nadanie.” — i wylogowanie.</p></div>`;return}
+  if(P.role!=='nurse'){box.innerHTML=`<div class="forbid"><b>${P.level===2?'✓':'…'}</b><h2>${P.level===2?'Pełny panel Administratora':'Dostęp ograniczony'}</h2><p class="mut">${P.level===2?'Ta rola widzi to samo co Ty: wszystkie zakładki panelu.':'Ta rola ma uprawnienie „Pielęgniarki” na poziomie ograniczonym, ale nie jest Pielęgniarką — nie ma własnego panelu ani zleceń.'}</p></div>`;return}
+  const n=A.nurses.find(x=>x.id===P.nurse_id)||null,f=t=>(A[t]||[]).filter(x=>x.nurse_id===n?.id);
+  NZ.D={...A,nurses:n?[n]:[],links:f('links'),docs:[],areas:f('areas'),patterns:f('patterns'),exceptions:f('exceptions'),zones:[],rules:[],pool:[],orders:[],attempts:[],waitlist:[],me:n,myOrders:P.orders||[],myRates:P.rates||[]};
+  NZ.pv={role:'nurse'};
+  box.innerHTML=nurseView(sub);
+  const t=$('#nzTop');if(t)t.innerHTML=t.innerHTML.replace(/#\/pielegniarki(\/?)/g,(m,sl)=>`#/podglad/${key}${sl}`);
+  clearInterval(NZ.timer);NZ.timer=setInterval(tickCountdowns,1000);tickCountdowns();
+  if(sub==='obszar')mountEditor();
+};
