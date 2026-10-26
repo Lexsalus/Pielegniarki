@@ -360,3 +360,14 @@ await as('admin',`select public.set_my_status('invisible')`);await as('admin',`s
 R((await db.query(`select status from public.user_presence where user_id=$1`,[U.admin])).rows[0].status==='invisible'&&!(await avA()),'Status Niewidoczny zapamiętany po ponownym zalogowaniu (bez sygnału)');
 await as('admin',`select public.set_my_status('online')`);await as('admin',`select public.presence_ping('logout')`);const av2=await avA();await as('admin',`select public.presence_ping('login')`);
 R(!!(await avA())&&(await avA())!==av2,'Logowanie ze statusem Dostępny → sygnał dla innych');
+// --- Powiadomienie o odczycie (migracja 008)
+await db.query(`update public.notifications set read_at=now() where event_type='czat.odczyt'`);
+await as('admin',`select public.chat_send(p_to=>$1,p_body=>'Sprawdź grafik na jutro')`,[U.nowak]);
+R((await as('admin',`select * from public.notifications where event_type='czat.odczyt' and read_at is null`)).rows.length===0,'Odczyt: przed przeczytaniem brak powiadomienia');
+await as('nowak',`select public.chat_read(p_with=>$1)`,[U.admin]);
+let rn=(await as('admin',`select * from public.notifications where event_type='czat.odczyt'`)).rows;
+R(rn.length===1&&!rn[0].read_at&&rn[0].title.startsWith('Przeczytane przez:')&&rn[0].body==='Sprawdź grafik na jutro','Odczyt: nadawca dostaje „Przeczytane przez” w dzwonku');
+await as('nowak',`select public.chat_read(p_with=>$1)`,[U.admin]);
+R((await as('admin',`select * from public.notifications where event_type='czat.odczyt'`)).rows.length===1,'Odczyt: ponowne otwarcie bez nowych wiadomości — bez kolejnego powiadomienia');
+await as('admin',`select public.chat_read(p_with=>$1)`,[U.nowak]);
+R(!!(await as('admin',`select * from public.notifications where event_type='czat.odczyt'`)).rows[0].read_at,'Odczyt: otwarcie rozmowy oznacza powiadomienie jako odczytane');

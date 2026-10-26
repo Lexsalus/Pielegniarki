@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.2.1] — 2026-10-26
+- Dzwonek: „Przeczytane przez: X”, gdy odbiorca przeczyta Twoją wiadomość (migracja 008)
+
 ## [1.2.0] — 2026-10-26
 - Powiadomienie o nowej wersji: pasek „Odśwież”, a przy wersji wymagającej ponownego logowania — „Zaloguj ponownie” z odliczaniem 5 min
 

@@ -1,6 +1,6 @@
 {
-  "version": "1.2.0",
+  "version": "1.2.1",
   "date": "2026-10-26",
-  "notes": "Powiadomienie o nowej wersji: pasek „Odśwież”, a przy wersji wymagającej ponownego logowania — „Zaloguj ponownie” z odliczaniem 5 min",
+  "notes": "Dzwonek: „Przeczytane przez: X”, gdy odbiorca przeczyta Twoją wiadomość (migracja 008)",
   "relogin": false
 }

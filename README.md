@@ -23,7 +23,7 @@ supabase/           schema.sql (użytkownicy, role, audyt, powiadomienia) + migr
 
 ## Baza
 
-Supabase, projekt **CRMKP** (`ixlhfhzgzotukstoezcj`, UE, Irlandia) — tylko dla tego panelu (od 26.10.2026 PiK ma własną bazę). Wdrożone: `schema.sql`, migracje 002–005 („Aktywni”, „Podgląd” — wdrożona 26.10.2026); 006 (komunikator) — wdrożona 26.10.2026; 007 (telefon, status) — wdrożona 26.10.2026, pg_cron `zlecenia-limit-czasu` (co minutę) i `przypomnienia-terminy`. Logowanie (Auth): Site URL i Redirect URLs — `https://lexsalus.github.io/Pielegniarki/`; rejestracja wyłączona, 2FA (TOTP) włączone.
+Supabase, projekt **CRMKP** (`ixlhfhzgzotukstoezcj`, UE, Irlandia) — tylko dla tego panelu (od 26.10.2026 PiK ma własną bazę). Wdrożone: `schema.sql`, migracje 002–005 („Aktywni”, „Podgląd” — wdrożona 26.10.2026); 006 (komunikator) — wdrożona 26.10.2026; 007 (telefon, status) — wdrożona 26.10.2026; 008 (powiadomienie o odczycie) — czeka na wdrożenie, pg_cron `zlecenia-limit-czasu` (co minutę) i `przypomnienia-terminy`. Logowanie (Auth): Site URL i Redirect URLs — `https://lexsalus.github.io/Pielegniarki/`; rejestracja wyłączona, 2FA (TOTP) włączone.
 
 Pozostałości po CRM kancelarii w tej bazie (puste tabele spraw, klientów, finansów, terminów, formularz `leads` z zapisem anonimowym) nie są używane — do usunięcia osobną migracją po decyzji właściciela.
 
@@ -36,7 +36,7 @@ Klucz w `index.html` to klucz publiczny (`sb_publishable_…`) — może być ja
 - Nowe konto: Supabase → Authentication → Users → Add user (Auto Confirm). W panelu: **Ustawienia → Konta** — rola (Pielęgniarka / Administrator), „Aktywne”, Zapisz; potem karta pielęgniarki → Dane i usługi → Konto. Konto bez uprawnienia „Pielęgniarki” po zalogowaniu dostaje komunikat o braku dostępu.
 - **Aktywni** (lewe menu, tylko Administrator): kto jest teraz zalogowany — panel co minutę wysyła sygnał obecności; aktywny = sygnał w ciągu 2 minut, bez wylogowania.
 - **Podgląd** (lewe menu, tylko Administrator): panel tak, jak widzi go wybrana rola (Pielęgniarka — na przykładzie wybranej karty) albo konkretna osoba; tylko do odczytu. Zlecenia i stawki z tych samych zapytań co panel pielęgniarki.
-- **Komunikator** (dymek 💬 w prawym dolnym rogu): pielęgniarka pisze tylko z Administratorem / dyspozytorem, Administrator — z każdym; pielęgniarki między sobą nie. Wiadomości do osób niezalogowanych są doręczane po zalogowaniu; ✓ wysłane, ✓✓ doręczone, ✓✓ (niebieskie) przeczytane. Wątek przy zleceniu (💬 na liście zleceń i w panelu pielęgniarki): Administrator / dyspozytor + pielęgniarka przypisana do zlecenia. Bez załączników. Nowa wiadomość → powiadomienie w dzwonku (jedno na rozmowę).
+- **Komunikator** (dymek 💬 w prawym dolnym rogu): pielęgniarka pisze tylko z Administratorem / dyspozytorem, Administrator — z każdym; pielęgniarki między sobą nie. Wiadomości do osób niezalogowanych są doręczane po zalogowaniu; ✓ wysłane, ✓✓ doręczone, ✓✓ (niebieskie) przeczytane. Wątek przy zleceniu (💬 na liście zleceń i w panelu pielęgniarki): Administrator / dyspozytor + pielęgniarka przypisana do zlecenia. Bez załączników. Nowa wiadomość → powiadomienie w dzwonku (jedno na rozmowę); gdy odbiorca przeczyta wiadomość — „Przeczytane przez: X” (jedno na rozmowę, bez osobnego o doręczeniu).
 - **Telefon i status**: numer telefonu ustawia Administrator w Ustawieniach → Konta; w komunikatorze przy osobie jest 📞 (szybkie połączenie). Numer widzą tylko osoby, które mogą ze sobą pisać (pielęgniarki nie widzą numerów innych pielęgniarek). Administrator / dyspozytor ustawia swój status kliknięciem w swoją nazwę u góry: 🟢 Dostępny, 🟠 Zajęty, ⚪ Niewidoczny (dla wszystkich wygląda na niezalogowanego, także w „Aktywni”). Status zostaje po wylogowaniu. Gdy Administrator / dyspozytor zaloguje się ze statusem Dostępny albo zmieni status na Dostępny, inni zalogowani dostają komunikat z krótkim dźwiękiem.
 - **Powiadomienia** (dzwonek u góry): propozycje zleceń, zlecenia dla dyspozytora, zmiany obszaru i terminarza do zatwierdzenia.
 
@@ -50,7 +50,7 @@ Pielęgniarka widzi tylko siebie i własne zlecenia (bez ceny dla klienta i mar�
 
 ## Testy
 
-`supabase/test/` — opis w `supabase/test/e2e/README.md`. Wynik 26.10.2026: reguły bazy 176/176, interfejs 87/87.
+`supabase/test/` — opis w `supabase/test/e2e/README.md`. Wynik 26.10.2026: reguły bazy 181/181, interfejs 88/88.
 
 ## Rozstrzygnięcia tam, gdzie projekt milczy (do potwierdzenia albo zmiany)
 

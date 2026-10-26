@@ -237,6 +237,7 @@ async def main():
       await pg.evaluate(f"chatOpenOrder('{oid}',0)"); await pg.wait_for_timeout(700); await pg.fill('#chIn','Klient nie otwiera'); await pg.keyboard.press('Enter'); await pg.wait_for_timeout(900)
       ok('Klient nie otwiera' in await T('#chMsgs'),'Wątek zlecenia: pielęgniarka pisze przy zleceniu')
       await login('admin@k.test'); await pg.wait_for_timeout(1200); await pg.click('#chatFab'); await pg.wait_for_timeout(800)
+      ok('Przeczytane przez: Anna Nowak' in await pg.evaluate("JSON.stringify(DB.notifs.map(n=>n.title))"),'Dzwonek: „Przeczytane przez” po odczycie wiadomości')
       ok('wątki zleceń' in (await T('#chatBox')).lower() and 'Klient nie otwiera' in await T('#chatBox'),'Wątek zlecenia na liście u Administratora')
       await pg.click('#chatBox .chi:has-text("Anna Nowak")'); await pg.wait_for_timeout(900)
       ok(await pg.locator('#chMsgs .msg.me .ck.rd').count()==1 and 'Oddzwonię' in await T('#chMsgs'),'Czat: potwierdzenie odczytu ✓✓ i odpowiedź')
