@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Panel pielęgniarek</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --accent:#7c5cff;--bg:#0b0d14;--bg2:#10131c;--card:#151927;--card2:#1b2032;--line:#262c42;
+  --txt:#e8eaf3;--mut:#8b92ad;--good:#2fd6a0;--bad:#ff6b81;--warn:#f5b84a;--info:#5aa9ff;
+  --r:14px;--sh:0 10px 40px -14px rgba(0,0,0,.6);
+}
+[data-theme=light]{--bg:#f4f5fa;--bg2:#ffffff;--card:#ffffff;--card2:#eef0f6;--line:#e1e4ee;--txt:#151a2b;--mut:#646b85;--sh:0 8px 28px -16px rgba(30,40,80,.3)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--txt);font-size:14px;line-height:1.45;min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:inherit;text-decoration:none}
+h1{font-size:1.45rem;letter-spacing:-.02em}h2{font-size:1.1rem}h3{font-size:1rem}
+.proto{background:var(--warn);color:#1a1300;text-align:center;font-weight:700;font-size:.78rem;padding:5px 10px}
+/* login */
+#login{min-height:100vh;display:grid;place-items:center;padding:24px}
+.lbox{width:100%;max-width:760px}
+.lbox h1{text-align:center;margin:10px 0 6px}
+.lbox>p{text-align:center;color:var(--mut);margin-bottom:22px}
+.ugrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.ucard{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;cursor:pointer;transition:.2s;text-align:left}
+.ucard:hover{border-color:var(--accent);transform:translateY(-2px)}
+.ucard small{display:block;color:var(--mut)}
+/* layout */
+#app{display:none;grid-template-columns:232px 1fr;min-height:100vh}
+aside{background:var(--bg2);border-right:1px solid var(--line);padding:16px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{font-weight:800;font-size:1.02rem;display:flex;gap:10px;align-items:center;padding:4px 10px 16px}
+.brand i{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#2fd6a0);display:grid;place-items:center;font-style:normal;color:#fff;font-size:.85rem}
+.nav{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;color:var(--mut);font-weight:600;cursor:pointer;border:0;background:none;width:100%;text-align:left}
+.nav:hover{background:var(--card)}.nav.on{background:var(--card2);color:var(--txt)}
+.nav .cnt{margin-left:auto;background:var(--bad);color:#fff;border-radius:20px;font-size:.72rem;padding:1px 7px;font-weight:700}
+.nav .cnt.n{background:var(--accent)}
+aside .sp{flex:1}
+main{min-width:0}
+.top{display:flex;align-items:center;gap:12px;padding:12px 24px;border-bottom:1px solid var(--line);position:sticky;top:0;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(10px);z-index:20}
+.search{flex:1;max-width:520px;position:relative}
+.search input{width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 12px 9px 34px;outline:none}
+.search input:focus{border-color:var(--accent)}
+.search::before{content:"⌕";position:absolute;left:12px;top:7px;color:var(--mut);font-size:1.1rem}
+.sres{position:absolute;top:44px;left:0;right:0;background:var(--bg2);border:1px solid var(--line);border-radius:12px;box-shadow:var(--sh);overflow:hidden;display:none}
+.sres.show{display:block}
+.sres a{display:flex;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.sres a:hover{background:var(--card)}
+.me{margin-left:auto;display:flex;align-items:center;gap:10px}
+.me small{display:block;color:var(--mut);font-size:.75rem}
+.content{padding:22px 24px 60px;max-width:1320px}
+.ph{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.ph p{color:var(--mut);margin-top:2px}
+/* elements */
+.av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:.75rem;color:#fff;flex:none}
+.avs{display:flex}.avs .av{margin-left:-8px;border:2px solid var(--bg)}.avs .av:first-child{margin-left:0}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-weight:600;white-space:nowrap;transition:.15s}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.del{color:var(--bad)}.btn.del:hover{border-color:var(--bad)}
+.btn.sm{padding:5px 10px;font-size:.82rem}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--card);cursor:pointer;display:grid;place-items:center;position:relative}
+.icon-btn .dot{position:absolute;top:-5px;right:-5px;background:var(--bad);color:#fff;border-radius:20px;font-size:.66rem;padding:1px 5px;font-weight:700}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.card>h3{margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;cursor:pointer;transition:.2s}
+.tile:hover{border-color:var(--accent)}
+.tile span{color:var(--mut);font-weight:600;font-size:.85rem}
+.tile b{display:block;font-size:2rem;font-weight:800;margin:4px 0 2px;letter-spacing:-.02em}
+.tile small{font-weight:600}
+.f{background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:8px 10px;outline:none;width:100%;min-width:0}
+.f:focus{border-color:var(--accent)}
+textarea.f{resize:vertical;min-height:70px}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.form label,.fl{display:grid;gap:5px;color:var(--mut);font-weight:600;font-size:.8rem}
+.form .full{grid-column:1/-1}
+.chk{display:flex!important;align-items:center;gap:8px;color:var(--txt)!important;font-weight:500!important;font-size:.88rem!important;cursor:pointer}
+.chk input{accent-color:var(--accent);width:17px;height:17px}
+table{width:100%;border-collapse:collapse}
+th{color:var(--mut);font-weight:600;font-size:.76rem;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
+td b{white-space:nowrap}
+tr.click{cursor:pointer}tr.click:hover td{background:var(--card2)}
+.tw{overflow-x:auto}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:20px;font-size:.74rem;font-weight:700;white-space:nowrap;background:var(--card2);color:var(--mut)}
+.badge.cat{color:#fff}
+.b-good{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
+.b-bad{background:color-mix(in srgb,var(--bad) 18%,transparent);color:var(--bad)}
+.b-warn{background:color-mix(in srgb,var(--warn) 20%,transparent);color:var(--warn)}
+.b-info{background:color-mix(in srgb,var(--info) 18%,transparent);color:var(--info)}
+.b-acc{background:color-mix(in srgb,var(--accent) 20%,transparent);color:var(--accent)}
+.dotc{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.mut{color:var(--mut)}.small{font-size:.82rem}
+.hint{color:var(--mut);font-size:.8rem;line-height:1.5;margin-top:8px}
+.note{background:color-mix(in srgb,var(--warn) 12%,var(--card));border:1px solid color-mix(in srgb,var(--warn) 45%,var(--line));border-radius:10px;padding:10px 12px;font-size:.84rem}
+.note.info{background:color-mix(in srgb,var(--info) 10%,var(--card));border-color:color-mix(in srgb,var(--info) 40%,var(--line))}
+.empty{color:var(--mut);text-align:center;padding:30px;border:1px dashed var(--line);border-radius:var(--r)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:6px 12px;border-radius:20px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-weight:600;font-size:.82rem;display:inline-flex;gap:6px;align-items:center}
+.chip.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 15%,var(--card))}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.toolbar .f{width:auto}
+/* case */
+.chead{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:6px}
+.chead h1{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:16px 0 18px;overflow-x:auto}
+.tab{padding:10px 14px;border:0;background:none;color:var(--mut);font-weight:600;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.tab.on{color:var(--txt);border-bottom-color:var(--accent)}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:8px 12px;font-size:.9rem}
+.kv dt{color:var(--mut)}
+.stages{display:grid;gap:4px}
+.stg{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:10px;cursor:pointer;border:1px solid transparent}
+.stg:hover{background:var(--card2)}.stg.on{border-color:var(--accent);background:var(--card2)}
+.stg .n{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:.78rem;font-weight:700;background:var(--card2);border:1px solid var(--line);flex:none}
+.stg.approved .n{background:var(--good);border-color:var(--good);color:#06281d}
+.stg.open .n{background:var(--accent);border-color:var(--accent);color:#fff}
+.entry{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;background:var(--bg2)}
+.entry.locked{border-left:3px solid var(--good)}
+.entry.draft{border-left:3px solid var(--warn)}
+.entry .eh{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.entry .ea{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.file{display:inline-flex;gap:6px;align-items:center;background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:3px 9px;font-size:.8rem;margin:6px 6px 0 0}
+.timeline{display:grid;gap:0}
+.tl{display:grid;grid-template-columns:130px 1fr;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line);font-size:.86rem}
+.tl time{color:var(--mut)}
+.diff{font-size:.8rem;color:var(--mut);margin-top:3px}.diff s{color:var(--bad)}.diff ins{color:var(--good);text-decoration:none}
+/* calendar */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal .dh{color:var(--mut);font-size:.75rem;font-weight:700;text-align:center;padding:4px}
+.cal .d{min-height:74px;border:1px solid var(--line);border-radius:8px;padding:5px;font-size:.78rem;background:var(--bg2);overflow:hidden}
+.cal .d.out{opacity:.35}.cal .d.today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.cal .d.hol{background:color-mix(in srgb,var(--bad) 7%,var(--bg2))}
+.cal .ev{display:block;border-radius:5px;padding:1px 5px;margin-top:3px;color:#fff;font-size:.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.dl{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}
+.dl .when{width:96px;flex:none;font-weight:700;font-size:.86rem}
+.dl .what{flex:1;min-width:0}
+.dl .what small{display:block;color:var(--mut)}
+.st-overdue{color:var(--bad)}.st-urgent{color:var(--bad)}.st-soon{color:var(--warn)}.st-open{color:var(--info)}.st-done{color:var(--good)}
+/* notif */
+.nt{display:flex;gap:12px;padding:12px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:var(--card);cursor:pointer}
+.nt.unread{border-left:3px solid var(--accent)}
+.nt .ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:800;flex:none}
+.nt .ic.pilne{background:color-mix(in srgb,var(--bad) 20%,transparent);color:var(--bad)}
+.nt .ic.wazne{background:color-mix(in srgb,var(--warn) 20%,transparent);color:var(--warn)}
+.nt .ic.normalne{background:color-mix(in srgb,var(--info) 18%,transparent);color:var(--info)}
+/* finance */
+.alloc{display:grid;grid-template-columns:1.4fr 1.2fr 110px 120px 32px;gap:8px;align-items:center;margin-bottom:6px}
+.bal{font-weight:800;padding:6px 12px;border-radius:10px;display:inline-block}
+.bar{height:10px;border-radius:6px;background:var(--card2);overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+/* matrix */
+.mx td,.mx th{text-align:center;padding:7px}
+.mx td:first-child,.mx th:first-child{text-align:left}
+.m-full{color:var(--good);font-weight:800}.m-lim{color:var(--warn);font-weight:800}.m-none{color:var(--mut)}
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(5,7,12,.65);backdrop-filter:blur(4px);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:40px 16px;overflow:auto}
+.modal.show{display:flex}
+.mbox{background:var(--bg2);border:1px solid var(--line);border-radius:18px;width:100%;max-width:640px;padding:22px;box-shadow:var(--sh)}
+.mbox.wide{max-width:900px}
+.mhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--card2);border:1px solid var(--accent);padding:12px 16px;border-radius:12px;opacity:0;transform:translateY(10px);transition:.3s;pointer-events:none;z-index:200;max-width:380px}
+.toast.show{opacity:1;transform:none}
+.toast.err{border-color:var(--bad)}
+.forbid{text-align:center;padding:60px 20px}
+.forbid b{font-size:3rem;display:block;color:var(--bad)}
+.lock{font-size:.8rem}
+.calcbox{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.res .main{font-size:1.7rem;font-weight:800;margin:2px 0 10px}
+.res .sub{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:.88rem}
+.svgchart text{fill:var(--mut);font-size:11px;font-family:inherit}
+@media(max-width:980px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g3,.g2,.calcbox{grid-template-columns:1fr}}
+@media(max-width:760px){#app{grid-template-columns:1fr}aside{position:static;height:auto;flex-direction:row;flex-wrap:wrap}.brand{width:100%}aside .sp,.me small{display:none}.content{padding:16px}.top{padding:10px 16px}.kv{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="login"><div class="lbox"></div></div>
+<div id="app">
+  <aside id="side"></aside>
+  <main>
+    <div class="top">
+      <div style="flex:1"></div>
+      <div class="me">
+        <button class="icon-btn" id="theme" title="Motyw">🌓</button>
+        <div id="meBox" style="display:flex;gap:10px;align-items:center"></div>
+        <button class="btn sm" id="logout">Wyloguj</button>
+      </div>
+    </div>
+    <div class="content" id="view"></div>
+  </main>
+</div>
+<div class="modal" id="modal"><div class="mbox" id="mbox"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+'use strict';
+/* =====================================================================
+   Panel pielęgniarek — powłoka: logowanie (2FA), uprawnienia, router.
+   Cała zakładka: pielegniarki.js. Dane i reguły: Supabase (RLS + funkcje).
+   ===================================================================== */
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parseD=s=>{const [y,m,d]=String(s).slice(0,10).split('-').map(Number);return new Date(y,m-1,d)};
+const today=()=>{const d=new Date();d.setHours(0,0,0,0);return d};
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const dayDiff=(a,b)=>Math.round((parseD(iso(b))-parseD(iso(a)))/864e5);
+const fD=s=>{if(!s)return '—';const d=parseD(s);return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()}`};
+const fDT=s=>{if(!s)return '—';const d=new Date(s);return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`};
+const DOW=['niedziela','poniedziałek','wtorek','środa','czwartek','piątek','sobota'];
+const money=v=>Number.isFinite(+v)?(+v).toLocaleString('pl-PL',{minimumFractionDigits:0,maximumFractionDigits:2})+' zł':'—';
+const nowISO=()=>new Date().toISOString();
+const initials=n=>n.split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase();
+const COLORS=['#7c5cff','#2fd6a0','#f59e0b','#ef4444','#3b82f6','#ec4899','#14b8a6','#8b5cf6'];
+
+
+const ROLES={admin:'Administrator',att:'Pełnomocnik',app:'Aplikant',office:'Biuro',tech:'Obsługa techniczna',nurse:'Pielęgniarka'};
+const ROLE_DEF={};
+let DB=null,ME=null;
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const U=id=>DB.users.find(u=>u.id===id)||{name:'—',id:'',role:''};
+class Forbidden extends Error{constructor(m){super(m||'Brak uprawnień (403)');this.code=403}}
+const need=(ok,msg)=>{if(!ok)throw new Forbidden(msg)};
+function permLevel(p,u=ME){
+  if(!u)return 0;const o=DB?.overrides?.[u.id]?.[p];
+  if(o&&(!o.until||o.until>=iso(today())))return o.value;
+  return ROLE_DEF[u.role]?.[p]||0;
+}
+const can=(p,u=ME)=>permLevel(p,u)>0;
+const safeName=n=>n.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ł/g,'l').replace(/Ł/g,'L').replace(/[^\w.\-]+/g,'_').slice(-120);
+/* --- UI: toast, modal, awatary, odznaki --- */
+function toast(m,err){const t=$('#toast');t.textContent=m;t.classList.toggle('err',!!err);t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600)}
+const closeModal=()=>$('#modal').classList.remove('show');
+$('#modal').addEventListener('mousedown',e=>{if(e.target.id==='modal')closeModal()});
+addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+// pytanie o uzasadnienie (usuwanie, nadpisanie, korekta)
+const askReason=(title,label,cb,{ok='Potwierdź',danger=true,extra=''}={})=>modal(title,`${extra}<label class="fl">${esc(label)}<textarea class="f" name="reason" required minlength="5" placeholder="Wymagane — zapisze się w dzienniku audytu"></textarea></label>`,{ok,danger,onOk:f=>cb(f.reason.trim(),f)});
+
+const th=store.get('theme');if(th)document.documentElement.dataset.theme=th;
+$('#theme').onclick=()=>{const v=document.documentElement.dataset.theme==='light'?'dark':'light';document.documentElement.dataset.theme=v;store.set('theme',v)};
+
+
+/* --- menu i router --- */
+function renderShell(){
+  const cnt=typeof nzBadge==='function'?nzBadge():0;
+  $('#side').innerHTML=`<div class="brand"><i>🩺</i>Pielęgniarki</div><a class="nav on" href="#/pielegniarki">🩺 Pielęgniarki${cnt?`<span class="cnt">${cnt}</span>`:''}</a><div class="sp"></div>`;
+  $('#meBox').innerHTML=`<span class="av" style="background:${esc(ME.color||'#7c5cff')}">${esc(initials(ME.name||'?'))}</span><div><b>${esc(ME.name)}</b><small>${esc(ROLES[ME.role]||'')}</small></div>`;
+}
+const ROUTES={};
+function route(){
+  if(!ME)return;renderShell();
+  const [,page='pielegniarki',a,b]=location.hash.split('/');
+  const V=$('#view');window.scrollTo(0,0);
+  try{const fn=ROUTES[page];if(!fn)throw new Forbidden('Nie ma takiej strony');V.innerHTML=fn(a,b)||'';ROUTES[page].after?.(a,b)}
+  catch(e){if(e.code===403)V.innerHTML=`<div class="forbid"><b>403</b><h2>Brak dostępu</h2><p class="mut" style="margin:8px 0 18px">${esc(e.message)}</p><a class="btn" href="#/pielegniarki">← Wróć</a></div>`;else{console.error(e);V.innerHTML=`<div class="empty">Błąd: ${esc(e.message)}</div>`}}
+}
+addEventListener('hashchange',route);
+const rerender=()=>route();
+
+/* =====================================================================
+   Supabase (ta sama baza co CRM kancelarii: projekt CRMKP)
+   ===================================================================== */
+const SB_URL='https://ixlhfhzgzotukstoezcj.supabase.co';
+const SB_KEY='sb_publishable_RyhhD3X6ZQ2broLW8CHc6w_PRz15jd4';               // klucz publiczny (publishable) — może być jawny
+const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+const NEED_2FA=['admin','att','tech'];
+const errMsg=e=>{const m=e?.message||String(e||'Błąd');return m.replace(/^.*?ERROR:\s*/,'').replace(/\s*\(SQLSTATE.*$/,'')};
+// operacje serwera robią same: historia, audyt, powiadomienia, przypomnienia
+// modal obsługuje operacje asynchroniczne (okno zostaje otwarte, gdy baza odrzuci zmianę)
+function modal(title,body,{ok='Zapisz',wide=false,onOk,cancel='Anuluj',danger=false}={}){
+  const M=$('#modal');$('#mbox').className='mbox'+(wide?' wide':'');
+  $('#mbox').innerHTML=`<div class="mhead"><h2>${esc(title)}</h2><button class="icon-btn" data-x>✕</button></div><form id="mform">${body}<div class="mfoot">${cancel?`<button type="button" class="btn" data-x>${esc(cancel)}</button>`:''}${ok?`<button class="btn ${danger?'del':'pri'}">${esc(ok)}</button>`:''}</div></form>`;
+  M.classList.add('show');$$('[data-x]',M).forEach(b=>b.onclick=closeModal);
+  $('#mform').onsubmit=async e=>{e.preventDefault();const btn=$('#mform button.pri,#mform button.del');if(btn)btn.disabled=true;
+    try{const r=await onOk?.(Object.fromEntries(new FormData(e.target)),e.target);if(r!==false)closeModal()}
+    catch(err){console.error(err);toast(errMsg(err),true)}finally{if(btn)btn.disabled=false}};
+  setTimeout(()=>$('#mform input:not([type=hidden]),#mform select,#mform textarea')?.focus(),30);
+}
+const chk=r=>{if(r?.error)throw r.error;return r?.data};
+async function act(fn,okMsg){try{const d=await fn();await reload();rerender();if(okMsg)toast(okMsg);return d}catch(e){console.error(e);toast(errMsg(e),true);throw e}}
+const actSafe=(fn,m)=>act(fn,m).catch(()=>{});
+
+
+async function fetchAll(t,order){let q=sb.from(t).select('*');if(order)q=q.order(order,{ascending:true});const r=await q.limit(5000);return r.error?[]:r.data}
+/* użytkownicy (do powiązania konta z kartą) i uprawnienia — pozostałe dane wczytuje pielegniarki.js */
+async function reload(){
+  const [p,rp,po]=await Promise.all(['profiles','role_permissions','permission_overrides'].map(t=>fetchAll(t)));
+  Object.keys(ROLE_DEF).forEach(k=>delete ROLE_DEF[k]);rp.forEach(r=>{(ROLE_DEF[r.role]=ROLE_DEF[r.role]||{})[r.perm]=r.level});
+  const d={users:p.map(x=>({id:x.id,name:x.full_name||x.email,role:x.role,email:x.email,color:x.color,active:x.active})),overrides:{}};
+  po.forEach(o=>{(d.overrides[o.user_id]=d.overrides[o.user_id]||{})[o.perm]={value:o.level,until:o.valid_until}});
+  DB=d;ME=d.users.find(u=>u.id===SESSION_UID)||ME;
+}
+/* --- logowanie: e-mail + hasło, potem 2FA (TOTP) --- */
+let SESSION_UID=null;
+function loginView(step,extra={}){
+  const L=$('#login .lbox');
+  const head=`<div style="text-align:center;font-size:2rem">🩺</div><h1>Panel pielęgniarek</h1>`;
+  const box=c=>`<div class="card" style="max-width:420px;margin:18px auto 0">${c}</div>`;
+  if(step==='password')L.innerHTML=head+`<p>Zaloguj się kontem nadanym przez Administratora.</p>`+box(`<form id="lf" class="form" style="grid-template-columns:1fr">
+    <label>E-mail<input class="f" type="email" name="email" required autocomplete="username" value="${esc(extra.email||'')}"></label>
+    <label>Hasło<input class="f" type="password" name="password" required autocomplete="current-password"></label>
+    <button class="btn pri" style="justify-content:center">Zaloguj</button><div id="lerr" class="small" style="color:var(--bad)"></div>
+    <a href="#" id="lforgot" class="small" style="color:var(--accent);text-align:center">Nie pamiętam hasła</a></form>`)+``;
+  if(step==='enroll')L.innerHTML=head+`<p>Twoja rola wymaga logowania dwuskładnikowego (2FA).</p>`+box(`<ol class="small" style="padding-left:18px;line-height:1.7"><li>Zainstaluj aplikację z kodami (np. Google Authenticator, Microsoft Authenticator).</li><li>Zeskanuj kod QR albo wpisz klucz ręcznie.</li><li>Wpisz 6-cyfrowy kod z aplikacji.</li></ol>
+    <div style="text-align:center;margin:12px 0"><img src="${esc(extra.qr)}" alt="Kod QR do aplikacji 2FA" style="width:200px;height:200px;background:#fff;border-radius:12px;padding:8px"></div>
+    <div class="small mut" style="text-align:center;word-break:break-all">Klucz: <code>${esc(extra.secret)}</code></div>
+    <form id="lf" class="form" style="grid-template-columns:1fr;margin-top:12px"><label>Kod z aplikacji<input class="f" name="code" required pattern="\\d{6}" inputmode="numeric" autocomplete="one-time-code" maxlength="6"></label><button class="btn pri" style="justify-content:center">Potwierdź</button><div id="lerr" class="small" style="color:var(--bad)"></div></form>`);
+  if(step==='verify')L.innerHTML=head+`<p>Wpisz kod z aplikacji 2FA.</p>`+box(`<form id="lf" class="form" style="grid-template-columns:1fr"><label>Kod (6 cyfr)<input class="f" name="code" required pattern="\\d{6}" inputmode="numeric" autocomplete="one-time-code" maxlength="6"></label><button class="btn pri" style="justify-content:center">Zaloguj</button><div id="lerr" class="small" style="color:var(--bad)"></div><a href="#" id="lback" class="small" style="color:var(--accent);text-align:center">Wyloguj</a></form>`);
+  if(step==='newpass')L.innerHTML=head+`<p>Ustaw nowe hasło.</p>`+box(`<form id="lf" class="form" style="grid-template-columns:1fr"><label>Nowe hasło (min. 12 znaków)<input class="f" type="password" name="p1" required minlength="12" autocomplete="new-password"></label><label>Powtórz<input class="f" type="password" name="p2" required minlength="12" autocomplete="new-password"></label><button class="btn pri" style="justify-content:center">Zapisz hasło</button><div id="lerr" class="small" style="color:var(--bad)"></div></form>`);
+  if(step==='inactive')L.innerHTML=head+box(`<p>Konto <b>${esc(extra.email||'')}</b> nie jest jeszcze aktywne. Poproś Administratora o nadanie roli i aktywację.</p><button class="btn" id="lback" style="margin-top:12px">Wyloguj</button>`);
+  if(step==='noperm')L.innerHTML=head+box(`<p>Konto <b>${esc(extra.email||'')}</b> nie ma uprawnienia „Pielęgniarki”. Poproś Administratora o nadanie.</p><button class="btn" id="lback" style="margin-top:12px">Wyloguj</button>`);
+  if(step==='loading')L.innerHTML=head+`<p>Wczytywanie danych…</p>`;
+  const f=$('#lf'),err=m=>{const x=$('#lerr');if(x)x.textContent=m};
+  $('#lback')&&($('#lback').onclick=async e=>{e.preventDefault();await sb.auth.signOut();loginView('password')});
+  $('#lforgot')&&($('#lforgot').onclick=async e=>{e.preventDefault();const em=$('#lf [name=email]').value.trim();if(!em)return err('Wpisz e-mail, potem kliknij ponownie.');
+    const r=await sb.auth.resetPasswordForEmail(em,{redirectTo:location.origin+location.pathname});err(r.error?errMsg(r.error):'Jeśli konto istnieje, wysłaliśmy link do ustawienia hasła.')});
+  if(!f)return;
+  f.onsubmit=async e=>{e.preventDefault();const v=Object.fromEntries(new FormData(f)),b=f.querySelector('button');b.disabled=true;
+    try{
+      if(step==='password'){const r=await sb.auth.signInWithPassword({email:v.email.trim(),password:v.password});if(r.error)throw r.error;await afterSignIn()}
+      if(step==='enroll'){const r=await sb.auth.mfa.challengeAndVerify({factorId:extra.factorId,code:v.code});if(r.error)throw r.error;await sb.rpc('log_login',{p_action:'logowanie.2fa_konfiguracja'});await afterSignIn()}
+      if(step==='verify'){const r=await sb.auth.mfa.challengeAndVerify({factorId:extra.factorId,code:v.code});if(r.error)throw r.error;await afterSignIn()}
+      if(step==='newpass'){if(v.p1!==v.p2)throw new Error('Hasła się różnią');const r=await sb.auth.updateUser({password:v.p1});if(r.error)throw r.error;toast('Hasło zmienione');await afterSignIn()}
+    }catch(x){err(/Invalid login/i.test(x.message)?'Nieprawidłowy e-mail lub hasło.':/invalid totp|Invalid TOTP/i.test(x.message)?'Nieprawidłowy kod — sprawdź czas w telefonie i spróbuj ponownie.':errMsg(x))}finally{b.disabled=false}};
+}
+async function afterSignIn(){
+  const {data:{user}}=await sb.auth.getUser();if(!user)return loginView('password');
+  SESSION_UID=user.id;
+  const p=(await sb.from('profiles').select('*').eq('id',user.id).single()).data;
+  if(!p||!p.active)return loginView('inactive',{email:user.email});
+  const aal=(await sb.auth.mfa.getAuthenticatorAssuranceLevel()).data;
+  if(NEED_2FA.includes(p.role)&&aal?.currentLevel!=='aal2'){
+    const f=(await sb.auth.mfa.listFactors()).data;const tot=(f?.totp||[]).find(x=>x.status==='verified');
+    if(tot)return loginView('verify',{factorId:tot.id});
+    (f?.all||[]).filter(x=>x.factor_type==='totp'&&x.status!=='verified').forEach(x=>sb.auth.mfa.unenroll({factorId:x.id}));
+    const en=await sb.auth.mfa.enroll({factorType:'totp',friendlyName:'CRM '+new Date().toISOString().slice(0,10)});
+    if(en.error){loginView('password');return toast(errMsg(en.error),true)}
+    return loginView('enroll',{factorId:en.data.id,qr:en.data.totp.qr_code,secret:en.data.totp.secret});
+  }
+  loginView('loading');
+  ME={id:p.id,name:p.full_name||p.email,role:p.role,email:p.email,color:p.color};
+  try{await reload()}catch(e){console.error(e);return toast('Nie udało się wczytać danych: '+errMsg(e),true)}
+  if(!sessionStorage.getItem('crm_logged_'+p.id)){sessionStorage.setItem('crm_logged_'+p.id,1);sb.rpc('log_login',{p_action:'logowanie'})}
+  $('#login').style.display='none';$('#app').style.display='grid';
+  if(!can('nurses')){await sb.auth.signOut();return loginView('noperm',{email:user.email})}
+  if(!location.hash.startsWith('#/pielegniarki'))location.hash='#/pielegniarki';else route();
+}
+function renderLogin(){loginView('password')}
+$('#logout').onclick=async()=>{try{await sb.rpc('log_login',{p_action:'wylogowanie'})}catch(e){}await sb.auth.signOut();sessionStorage.clear();ME=null;DB=null;$('#app').style.display='none';$('#login').style.display='grid';loginView('password');history.replaceState(null,'',location.pathname)};
+
+
+sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY'){$('#login').style.display='grid';$('#app').style.display='none';loginView('newpass')}});
+addEventListener('DOMContentLoaded',async()=>{
+  if(/type=recovery/.test(location.hash))return;
+  const {data:{session}}=await sb.auth.getSession();
+  if(session)await afterSignIn();else loginView('password');
+});
+setInterval(async()=>{if(ME&&NZ.D&&document.visibilityState==='visible'&&!$('#modal').classList.contains('show')&&!location.hash.includes('/obszar')){await reload();renderShell()}},60000);
+</script>
+<script src="pielegniarki.js"></script>
+</body>
+</html>
