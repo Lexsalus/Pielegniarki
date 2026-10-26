@@ -23,9 +23,9 @@ supabase/           schema.sql (użytkownicy, role, audyt, powiadomienia) + migr
 
 ## Baza
 
-Supabase, projekt **CRMKP** (`ixlhfhzgzotukstoezcj`, UE, Irlandia) — tylko dla tego panelu (od 26.10.2026 PiK ma własną bazę). Wdrożone: `schema.sql`, migracje 002–005 („Aktywni”, „Podgląd” — wdrożona 26.10.2026); 006 (komunikator) — wdrożona 26.10.2026; 007 (telefon, status) — wdrożona 26.10.2026; 008 (powiadomienie o odczycie) — wdrożona 26.10.2026; 009 (poprawki bezpieczeństwa) — wdrożona 26.10.2026; 010 (usunięcie pustych tabel CRM kancelarii) — czeka na wdrożenie; zasady haseł: min. 10 znaków, małe i wielkie litery, cyfra; zmiana hasła wymaga ponownego potwierdzenia, pg_cron `zlecenia-limit-czasu` (co minutę) i `przypomnienia-terminy`. Logowanie (Auth): Site URL i Redirect URLs — `https://lexsalus.github.io/Pielegniarki/`; rejestracja wyłączona, 2FA (TOTP) włączone.
+Supabase, projekt **CRMKP** (`ixlhfhzgzotukstoezcj`, UE, Irlandia) — tylko dla tego panelu (od 26.10.2026 PiK ma własną bazę). Wdrożone: `schema.sql`, migracje 002–005 („Aktywni”, „Podgląd” — wdrożona 26.10.2026); 006 (komunikator) — wdrożona 26.10.2026; 007 (telefon, status) — wdrożona 26.10.2026; 008 (powiadomienie o odczycie) — wdrożona 26.10.2026; 009 (poprawki bezpieczeństwa) — wdrożona 26.10.2026; 010 (usunięcie pustych tabel CRM kancelarii) — wdrożona 26.10.2026; zasady haseł: min. 10 znaków, małe i wielkie litery, cyfra; zmiana hasła wymaga ponownego potwierdzenia, pg_cron `zlecenia-limit-czasu` (co minutę) i `przypomnienia-terminy`. Logowanie (Auth): Site URL i Redirect URLs — `https://lexsalus.github.io/Pielegniarki/`; rejestracja wyłączona, 2FA (TOTP) włączone.
 
-Pozostałości po CRM kancelarii w tej bazie (puste tabele spraw, klientów, finansów, terminów, formularz `leads` — od migracji 009 bez zapisu anonimowego) nie są używane — do usunięcia osobną migracją po decyzji właściciela.
+Pozostałości po CRM kancelarii (puste tabele spraw, klientów, finansów, terminów, zgłoszeń) usunięte migracją 010 (26.10.2026). Pusty folder plików „akta” w Storage zostaje bez reguł dostępu — można go usunąć ręcznie w panelu Supabase.
 
 Klucz w `index.html` to klucz publiczny (`sb_publishable_…`) — może być jawny; dostęp ogranicza baza (RLS). Nigdy nie wpisywać klucza `sb_secret_…`.
 
@@ -52,7 +52,7 @@ Klucz w `index.html` to klucz publiczny (`sb_publishable_…`) — może być ja
 - Odświeżanie: co minutę lekkie sprawdzenie najnowszego powiadomienia, pełne pobranie po nowym powiadomieniu albo co 5 min; powiadomienia i czat na żywo (Realtime), zapasowe sprawdzanie czatu co 30 s.
 - Zgłoszenia ze strony (`leads`, pozostałość po CRM kancelarii) bez zapisu anonimowego.
 - Podpisy kontrolne (SRI) bibliotek z CDN: Supabase i Leaflet — przeglądarka odrzuci zmieniony plik (przy zmianie wersji biblioteki trzeba podać nowy odcisk).
-- Do decyzji: adresy pacjentów wysyłane do OpenStreetMap / Google przy wyszukiwaniu i liczeniu dojazdu; usunięcie pustych tabel CRM kancelarii.
+- Do decyzji: adresy pacjentów wysyłane do OpenStreetMap / Google przy wyszukiwaniu i liczeniu dojazdu. (Usunięcie pustych tabel CRM kancelarii — zrobione, migracja 010.)
 
 ## Reguły pilnowane przez bazę
 
@@ -75,4 +75,3 @@ Pielęgniarka widzi tylko siebie i własne zlecenia (bez ceny dla klienta i mar�
 - Formularz „Zamów badania w domu” dla klientów (strona 8 projektu); teraz zlecenia zakłada Administrator / dyspozytor.
 - Anulowanie zlecenia (brak takiego statusu w projekcie).
 - Powiadomienia SMS / e-mail o propozycji zlecenia.
-- Usunięcie z bazy pustych tabel CRM kancelarii (jeszcze nie zrobione — zamknięty jest tylko zapis anonimowy do `leads`).
