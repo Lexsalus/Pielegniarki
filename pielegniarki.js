@@ -150,12 +150,14 @@ function zonesFor(id){
 /* =====================================================================
    MAPA: Leaflet + OpenStreetMap albo Google Maps (ustawienie)
    ===================================================================== */
-const loadScript=src=>new Promise((ok,no)=>{if([...document.scripts].some(s=>s.src===src))return ok();const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=()=>no(new Error('Nie udało się wczytać '+src));document.head.appendChild(s)});
-const loadCss=href=>{if(![...document.styleSheets].some(s=>s.href===href)){const l=document.createElement('link');l.rel='stylesheet';l.href=href;document.head.appendChild(l)}};
+const loadScript=(src,sri)=>new Promise((ok,no)=>{if([...document.scripts].some(s=>s.src===src))return ok();const s=document.createElement('script');s.src=src;if(sri){s.integrity=sri;s.crossOrigin='anonymous'}s.onload=ok;s.onerror=()=>no(new Error('Nie udało się wczytać '+src));document.head.appendChild(s)});
+const loadCss=(href,sri)=>{if(![...document.styleSheets].some(s=>s.href===href)){const l=document.createElement('link');l.rel='stylesheet';l.href=href;if(sri){l.integrity=sri;l.crossOrigin='anonymous'}document.head.appendChild(l)}};
 async function mapLib(){
   const c=NZ.D.cfg;
   if(c.map_provider==='google'&&c.google_key){if(!window.google?.maps?.Map)await loadScript(`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(c.google_key)}&v=weekly&language=pl&region=PL`);return 'google'}
-  if(!window.L){loadCss('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js')}
+  if(!window.L){   // podpis kontrolny (SRI): przeglądarka odrzuci zmieniony plik; przy zmianie wersji — nowy odcisk
+    loadCss('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css','sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H');
+    await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js','sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH')}
   return 'leaflet';
 }
 async function makeMap(el,{view,onClick,onMove}={}){

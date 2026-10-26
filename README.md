@@ -25,7 +25,7 @@ supabase/           schema.sql (użytkownicy, role, audyt, powiadomienia) + migr
 
 Supabase, projekt **CRMKP** (`ixlhfhzgzotukstoezcj`, UE, Irlandia) — tylko dla tego panelu (od 26.10.2026 PiK ma własną bazę). Wdrożone: `schema.sql`, migracje 002–005 („Aktywni”, „Podgląd” — wdrożona 26.10.2026); 006 (komunikator) — wdrożona 26.10.2026; 007 (telefon, status) — wdrożona 26.10.2026; 008 (powiadomienie o odczycie) — wdrożona 26.10.2026; 009 (poprawki bezpieczeństwa) — wdrożona 26.10.2026; zasady haseł: min. 10 znaków, małe i wielkie litery, cyfra; zmiana hasła wymaga ponownego potwierdzenia, pg_cron `zlecenia-limit-czasu` (co minutę) i `przypomnienia-terminy`. Logowanie (Auth): Site URL i Redirect URLs — `https://lexsalus.github.io/Pielegniarki/`; rejestracja wyłączona, 2FA (TOTP) włączone.
 
-Pozostałości po CRM kancelarii w tej bazie (puste tabele spraw, klientów, finansów, terminów, formularz `leads` z zapisem anonimowym) nie są używane — do usunięcia osobną migracją po decyzji właściciela.
+Pozostałości po CRM kancelarii w tej bazie (puste tabele spraw, klientów, finansów, terminów, formularz `leads` — od migracji 009 bez zapisu anonimowego) nie są używane — do usunięcia osobną migracją po decyzji właściciela.
 
 Klucz w `index.html` to klucz publiczny (`sb_publishable_…`) — może być jawny; dostęp ogranicza baza (RLS). Nigdy nie wpisywać klucza `sb_secret_…`.
 
@@ -51,7 +51,8 @@ Klucz w `index.html` to klucz publiczny (`sb_publishable_…`) — może być ja
 - Wylogowanie po 30 min bezczynności.
 - Odświeżanie: co minutę lekkie sprawdzenie najnowszego powiadomienia, pełne pobranie po nowym powiadomieniu albo co 5 min; powiadomienia i czat na żywo (Realtime), zapasowe sprawdzanie czatu co 30 s.
 - Zgłoszenia ze strony (`leads`, pozostałość po CRM kancelarii) bez zapisu anonimowego.
-- Do decyzji: 2FA dla pielęgniarek; adresy pacjentów wysyłane do OpenStreetMap / Google przy wyszukiwaniu i liczeniu dojazdu; podpisy kontrolne (SRI) bibliotek z CDN; usunięcie pustych tabel CRM kancelarii.
+- Podpisy kontrolne (SRI) bibliotek z CDN: Supabase i Leaflet — przeglądarka odrzuci zmieniony plik (przy zmianie wersji biblioteki trzeba podać nowy odcisk).
+- Do decyzji: adresy pacjentów wysyłane do OpenStreetMap / Google przy wyszukiwaniu i liczeniu dojazdu; usunięcie pustych tabel CRM kancelarii.
 
 ## Reguły pilnowane przez bazę
 
@@ -59,7 +60,7 @@ Pielęgniarka widzi tylko siebie i własne zlecenia (bez ceny dla klienta i mar�
 
 ## Testy
 
-`supabase/test/` — opis w `supabase/test/e2e/README.md`. Wynik 26.10.2026: reguły bazy 187/187, interfejs 88/88.
+`supabase/test/` — opis w `supabase/test/e2e/README.md`. Wynik 26.10.2026: reguły bazy 187/187, interfejs 92/92.
 
 ## Rozstrzygnięcia tam, gdzie projekt milczy (do potwierdzenia albo zmiany)
 
@@ -72,7 +73,6 @@ Pielęgniarka widzi tylko siebie i własne zlecenia (bez ceny dla klienta i mar�
 ## Propozycje (niewdrożone, decyzja właściciela)
 
 - Formularz „Zamów badania w domu” dla klientów (strona 8 projektu); teraz zlecenia zakłada Administrator / dyspozytor.
-- 2FA obowiązkowe dla roli Pielęgniarka (dane zdrowotne, RODO).
 - Anulowanie zlecenia (brak takiego statusu w projekcie).
 - Powiadomienia SMS / e-mail o propozycji zlecenia.
-- Usunięcie z bazy pustych tabel CRM kancelarii.
+- Usunięcie z bazy pustych tabel CRM kancelarii (jeszcze nie zrobione — zamknięty jest tylko zapis anonimowy do `leads`).

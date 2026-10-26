@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pielęgniarki">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js" integrity="sha384-KX6Y/AMIv9qA8TLCDul2JatZWeyrJVgj3Xu/0r30Nr05xO8md1+wHAgtdsRV9LoE" crossorigin="anonymous"></script>
 <script src="i18n.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -46,6 +46,7 @@ aside{background:var(--bg2);border-right:1px solid var(--line);padding:16px 12px
 .nav:hover{background:var(--card)}.nav.on{background:var(--card2);color:var(--txt)}
 .nav .cnt{margin-left:auto;background:var(--bad);color:#fff;border-radius:20px;font-size:.72rem;padding:1px 7px;font-weight:700}
 .nav .cnt.n{background:var(--accent)}
+.nav .cnt.onl{background:var(--good);color:#04130d}.nav .offdot{margin-left:auto;width:10px;height:10px;border-radius:50%;background:var(--bad);box-shadow:0 0 0 3px color-mix(in srgb,var(--bad) 25%,transparent)}
 aside .sp{flex:1}
 main{min-width:0}
 .top{display:flex;align-items:center;gap:12px;padding:12px 24px;border-bottom:1px solid var(--line);position:sticky;top:0;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(10px);z-index:20}
@@ -315,11 +316,14 @@ const hlp=t=>`<span class="hlp" tabindex="0" data-tip="${esc(t)}">?</span>`;
 /* --- aplikacja (PWA): przycisk „Zainstaluj aplikację” --- */
 if('serviceWorker' in navigator&&location.protocol!=='file:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(e=>console.warn('sw',e)));
 let pwaPrompt=null;
-const pwaInstalled=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const PWA_MODES=['standalone','minimal-ui','fullscreen','window-controls-overlay'];
+let pwaJustInstalled=false;
+const pwaInstalled=()=>pwaJustInstalled||PWA_MODES.some(m=>matchMedia(`(display-mode: ${m})`).matches)||navigator.standalone===true;
 const pwaIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const pwaShow=()=>$$('.pwabtn').forEach(b=>b.hidden=pwaInstalled());
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();pwaPrompt=e;pwaShow()});
-addEventListener('appinstalled',()=>{pwaPrompt=null;pwaShow();toast('Aplikacja zainstalowana')});
+PWA_MODES.forEach(m=>matchMedia(`(display-mode: ${m})`).addEventListener?.('change',pwaShow));   // karta przeniesiona do okna aplikacji bez przeładowania
+addEventListener('appinstalled',()=>{pwaPrompt=null;pwaJustInstalled=true;pwaShow();toast('Aplikacja zainstalowana')});
 document.addEventListener('click',async e=>{if(!e.target.closest?.('.pwabtn'))return;
   if(pwaPrompt){const p=pwaPrompt;pwaPrompt=null;p.prompt();try{await p.userChoice}catch(x){}pwaShow();return}
   const ios=pwaIOS();
@@ -327,7 +331,7 @@ document.addEventListener('click',async e=>{if(!e.target.closest?.('.pwabtn'))re
     ?`<p>Na iPhonie / iPadzie (Safari):</p><p>1. Stuknij <b>Udostępnij</b> (kwadrat ze strzałką w górę).</p><p>2. Wybierz <b>Do ekranu początkowego</b>.</p><p>3. Stuknij <b>Dodaj</b>.</p>`
     :`<p>Przeglądarka nie pokazała okna instalacji. Spróbuj tak:</p><p>Android (Chrome): menu <b>⋮</b> → <b>Zainstaluj aplikację</b> albo <b>Dodaj do ekranu głównego</b>.</p><p>Komputer (Chrome / Edge): ikona instalacji na końcu paska adresu albo menu → <b>Zainstaluj</b>.</p>`}</div>`,{ok:'',cancel:'Zamknij'});
 });
-addEventListener('DOMContentLoaded',pwaShow);
+addEventListener('DOMContentLoaded',pwaShow);addEventListener('load',()=>{pwaShow();setTimeout(pwaShow,1000)});
 
 /* --- wersja: jedno źródło — version.json (podbija ją bump.py) --- */
 let APP_VER='';

@@ -102,3 +102,9 @@ function chatAvail(){const L=(CH.state?.contacts||[]).filter(c=>c.staff);const f
   L.forEach(c=>{if(c.available_at)CH.av[c.user_id]=c.available_at});
   if(fresh.length){toast('🟢 '+fresh.map(c=>c.full_name).join(', ')+' — '+(fresh.length>1?'są dostępni':'jest dostępny'));chatChime()}}
 {const st=chatStop;chatStop=function(){st();CH.av=null}}
+
+/* lewy pasek → „Aktywni”: liczba innych osób zalogowanych teraz; nikt → czerwona kropka */
+function chatOnlineNav(){const a=document.querySelector('#side a[href="#/aktywni"]');if(!a)return;a.querySelector('.onl')?.remove();if(!CH.state)return;
+  const n=(CH.state.contacts||[]).filter(c=>c.online).length;
+  a.insertAdjacentHTML('beforeend',n?`<span class="cnt n onl" data-tip="Zalogowanych teraz (bez Ciebie): ${n}">${n}</span>`:`<span class="onl offdot" data-tip="Nikt inny nie jest teraz zalogowany"></span>`)}
+{const b2=chatBadge;chatBadge=function(){b2();chatOnlineNav()}}

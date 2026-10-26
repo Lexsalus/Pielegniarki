@@ -5,6 +5,7 @@ from playwright.async_api import async_playwright
 HERE=os.path.dirname(os.path.abspath(__file__))+'/'
 U=os.environ.get('NZ_URL','http://localhost:8766/index.html'); SH=HERE+'shim.js'; LF=HERE+'node_modules/leaflet/dist/'
 VER_OVR={}
+SRI_SB='sha384-KX6Y/AMIv9qA8TLCDul2JatZWeyrJVgj3Xu/0r30Nr05xO8md1+wHAgtdsRV9LoE'
 res=[]; ok=lambda c,m:(res.append(bool(c)),print(('✅ ' if c else '❌ ')+m))
 def sql(q,p=[]):
   r=urllib.request.urlopen(urllib.request.Request('http://localhost:9900/sql',data=json.dumps({'sql':q,'params':p}).encode(),method='POST')).read();return json.loads(r).get('data')
@@ -12,16 +13,19 @@ sq=lambda a1,o1,a2,o2: json.dumps([[[a1,o1],[a1,o2],[a2,o2],[a2,o1]]])
 async def main():
   sql("insert into public.districts(city,name,rings) values('Testowo','Północ',$1),('Testowo','Południe',$2) on conflict do nothing",[sq(52.05,21.0,52.1,21.1),sq(52.0,21.0,52.05,21.1)])
   async with async_playwright() as p:
-    b=await p.chromium.launch(); c=await b.new_context(locale='pl-PL',viewport={'width':1440,'height':950},timezone_id='Europe/Warsaw',service_workers='block'); errs=[]
+    b=await p.chromium.launch(args=['--disable-features=LocalNetworkAccessChecks,PrivateNetworkAccessSendPreflights,PrivateNetworkAccessRespectPreflightResults,BlockInsecurePrivateNetworkRequests']);   # strona podana przez test (bez odcisku nakładki) → bez blokady localhost
+    c=await b.new_context(locale='pl-PL',viewport={'width':1440,'height':950},timezone_id='Europe/Warsaw',service_workers='block'); errs=[]
     async def rt(r):
       u=r.request.url
       if 'supabase-js' in u: return await r.fulfill(path=SH,content_type='application/javascript')
       if 'unpkg.com/leaflet' in u: return await r.fulfill(path=LF+u.split('/dist/')[1],content_type='text/css' if u.endswith('.css') else 'application/javascript')
       if 'version.json' in u and VER_OVR: return await r.fulfill(body=json.dumps(VER_OVR),content_type='application/json')
+      if u.split('?')[0].endswith('index.html'):   # test podmienia bibliotekę Supabase na nakładkę → bez jej odcisku (Leaflet zostaje z odciskiem)
+        resp=await r.fetch(); body=(await resp.text()).replace(' integrity="'+SRI_SB+'" crossorigin="anonymous"','',1); return await r.fulfill(response=resp,body=body)
       if 'localhost' in u: return await r.continue_()
       await r.abort()
     await c.route('**/*',rt)
-    pg=await c.new_page(); pg.on('pageerror',lambda e:errs.append(str(e))); pg.on('dialog',lambda d: asyncio.ensure_future(d.accept()))
+    pg=await c.new_page(); pg.on('pageerror',lambda e:errs.append(str(e))); pg.on('console',lambda m: print('CONSOLE',m.text[:160]) if os.environ.get('DBG') else None); pg.on('dialog',lambda d: asyncio.ensure_future(d.accept()))
     T=lambda s: pg.inner_text(s)
     if os.environ.get('COLLECT'):   # zbiór tekstów interfejsu (do słownika i18n.js)
       COL=set(); pg.on('console',lambda m: COL.add(m.text[3:]) if m.text.startswith('__S') else None)
@@ -42,8 +46,10 @@ async def main():
     ok(mf['display']=='standalone' and len(mf['icons'])>=2 and await pg.get_attribute('link[rel=manifest]','href')=='manifest.webmanifest','PWA: plik aplikacji z ikonami')
     ok(await pg.is_visible('.lgtop .pwabtn'),'PWA: przycisk „Zainstaluj aplikację” na ekranie logowania')
     await pg.click('.lgtop .pwabtn'); await pg.wait_for_timeout(300); ok('ekranu' in await T('#mbox'),'PWA: bez okna przeglądarki → instrukcja instalacji'); await pg.click('#mbox [data-x] >> nth=0')
+    await pg.evaluate("dispatchEvent(new Event('appinstalled'))"); await pg.wait_for_timeout(200); ok(not await pg.is_visible('.lgtop .pwabtn'),'PWA: po instalacji przycisk znika od razu (bez odświeżania)')
     c2=await b.new_context(); p2=await c2.new_page(); await p2.route('**/*',rt); await p2.goto(U); 
     sw=await p2.evaluate("navigator.serviceWorker.ready.then(r=>r.active?.scriptURL||r.installing?.scriptURL||'')"); ok(sw.endswith('sw.js'),'PWA: skrypt w tle zarejestrowany'); await c2.close()
+    src_=open(HERE+'../../../index.html',encoding='utf-8').read(); ok('integrity="'+SRI_SB+'"' in src_ and 'sha384-cxOPjt7s7Iz04uaHJceBmS' in open(HERE+'../../../pielegniarki.js',encoding='utf-8').read(),'Podpisy kontrolne (SRI) bibliotek z CDN')
     th0=await pg.evaluate('document.documentElement.dataset.theme||""')
     await pg.click('.lgtop .lng[data-lang=uk]'); await pg.click('.lgtop .themebtn'); await pg.wait_for_timeout(300)
     ok('Увійти' in await T('#login') and await pg.evaluate('document.documentElement.dataset.theme||""')!=th0,'ekran logowania: język i motyw na górze')
@@ -185,6 +191,10 @@ async def main():
       a=await T('#view'); ok('zlecenie.utworzone' in a and 'pielegniarka.obszar_zatwierdzony' in a,'audyt: zlecenia i zatwierdzenia obszarów')
     if 'index.html' in U:
       m=await pg.eval_on_selector_all('#side a.nav','e=>e.map(x=>x.innerText)'); ok(any('Aktywni' in x for x in m),'Administrator: „Aktywni” w lewym menu')
+      await pg.evaluate('chatSync()'); await pg.wait_for_timeout(500); ok(await pg.locator('#side a[href="#/aktywni"] .offdot').count()==1,'Aktywni: nikt inny nie jest zalogowany → czerwona kropka')
+      sql("update public.user_presence set last_seen=now(),logout_at=null,status='online' where user_id=(select id from public.profiles where email='nowak@k.test')")
+      await pg.evaluate('chatSync()'); await pg.wait_for_timeout(500); ok((await T('#side a[href="#/aktywni"] .onl')).strip()=='1','Aktywni: liczba osób zalogowanych teraz')
+      sql("update public.user_presence set logout_at=now() where user_id=(select id from public.profiles where email='nowak@k.test')")
       await nav('#/aktywni',1200); a=await T('#view')
       ok('Aktywny teraz' in a and 'Admin' in a and 'Wylogowany' in a,'Aktywni: Administrator aktywny teraz, wylogowana pielęgniarka')
       ok(await T('#nzTop')=='','Aktywni: bez zakładek panelu w górnym pasku')
