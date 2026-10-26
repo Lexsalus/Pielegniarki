@@ -27,6 +27,10 @@ Klucz w `index.html` to klucz publiczny (`sb_publishable_…`) — może być ja
 - Nowe konto: Supabase → Authentication → Users → Add user (Auto Confirm). W panelu: **Ustawienia → Konta** — rola (Pielęgniarka / Administrator), „Aktywne”, Zapisz; potem karta pielęgniarki → Dane i usługi → Konto. Konto bez uprawnienia „Pielęgniarki” po zalogowaniu dostaje komunikat o braku dostępu.
 - **Powiadomienia** (dzwonek u góry): propozycje zleceń, zlecenia dla dyspozytora, zmiany obszaru i terminarza do zatwierdzenia.
 
+## Dane testowe
+
+`supabase/seed/dane_testowe.sql` — 8 pielęgniarek „TEST …” w różnych konfiguracjach (dzielnice, całe miasto + promień, wielokąt, urlop, do weryfikacji, zmiany do zatwierdzenia), usługi, uproszczone dzielnice Warszawy, cenniki 5 miast z nadpisaniem stawki, 4 reguły przydziału (proporcjonalnie, kolejka z limitem, po kolei, ręcznie), zlecenia we wszystkich statusach, lista oczekujących, dokumenty (jedno OC przeterminowane). Usunięcie: `supabase/seed/usun_dane_testowe.sql` (wpisy w dzienniku audytu zostają).
+
 ## Reguły pilnowane przez bazę
 
 Pielęgniarka widzi tylko siebie i własne zlecenia (bez ceny dla klienta i marży) i nie zatwierdza sama obszaru ani terminarza. Zlecenia zmieniają się wyłącznie przez funkcje (`create_nurse_order`, `dispatch_order`, `respond_order`, `advance_order`). Przed regułą przydziału działają twarde filtry: obszar, wolny termin, usługa, limit dzienny. Każde zlecenie wymaga akceptacji pielęgniarki (limit czasu → następna z puli → dyspozytor). Operacje trafiają do dziennika audytu.
