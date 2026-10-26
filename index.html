@@ -226,6 +226,8 @@ tr.click{cursor:pointer}tr.click:hover td{background:var(--card2)}
 .ck{letter-spacing:-2px;margin-left:3px}.ck.rd{color:var(--info);font-weight:800}
 .chf{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}.chf textarea{flex:1;resize:none;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-height:42px;max-height:120px}
 .ver{font-size:.7rem;font-weight:700;color:var(--mut);background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:1px 7px;vertical-align:middle;margin-left:4px}
+#updBar{position:sticky;top:0;z-index:150;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:9px 16px;background:color-mix(in srgb,var(--info) 18%,var(--bg2));border-bottom:1px solid var(--info);font-size:.85rem}
+#updBar.re{background:color-mix(in srgb,var(--warn) 20%,var(--bg2));border-bottom-color:var(--warn)}#updBar .un{color:var(--mut)}#updBar .ut{font-weight:600}
 </style>
 </head>
 <body>
@@ -329,8 +331,27 @@ addEventListener('DOMContentLoaded',pwaShow);
 
 /* --- wersja: jedno źródło — version.json (podbija ją bump.py) --- */
 let APP_VER='';
-fetch('version.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(v=>{if(!v?.version)return;APP_VER=v.version;
-  if(ME)renderShell();else{const h=document.querySelector('#login h1');if(h&&!h.querySelector('.ver'))h.insertAdjacentHTML('beforeend',` <span class="ver" data-notr>v${esc(APP_VER)}</span>`)}}).catch(()=>{});
+/* --- powiadomienie o nowej wersji: co 3 min (i po powrocie do karty) sprawdza version.json.
+   Zwykła wersja → pasek „Odśwież”. Wersja z "relogin": true → „Zaloguj ponownie”
+   i automatyczne wylogowanie po 5 minutach (z odliczaniem). --- */
+const UPD={shown:null,timer:null,until:0};
+const verLabel=()=>APP_VER?` <span class="ver" data-notr>v${esc(APP_VER)}</span>`:'';
+async function verCheck(){let v;try{const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;v=await r.json()}catch(e){return}
+  if(!v?.version)return;
+  if(!APP_VER){APP_VER=v.version;if(ME)renderShell();else{const h=document.querySelector('#login h1');if(h&&!h.querySelector('.ver'))h.insertAdjacentHTML('beforeend',verLabel())}return}
+  if(v.version===APP_VER||UPD.shown===v.version)return;
+  if(!ME){location.reload();return}                      // ekran logowania: po prostu wczytaj nową wersję
+  UPD.shown=v.version;const re=!!v.relogin;
+  if(re){UPD.until=Date.now()+5*60000;clearInterval(UPD.timer);UPD.timer=setInterval(verTick,1000)}
+  $('#updBar')?.remove();
+  document.body.insertAdjacentHTML('afterbegin',`<div id="updBar" class="${re?'re':''}" role="status"><b>🔄 ${re?'Nowa wersja wymaga ponownego zalogowania':'Jest nowa wersja panelu'}: v${esc(v.version)}</b>${v.notes?`<span class="un">${esc(v.notes)}</span>`:''}${re?`<span class="ut">Automatyczne wylogowanie za <b id="updLeft">5:00</b></span>`:''}<span style="flex:1"></span>${re?`<button class="btn sm pri" type="button" onclick="verRelogin()">Zaloguj ponownie</button>`:`<button class="btn sm pri" type="button" onclick="location.reload()">Odśwież</button><button class="btn sm" type="button" onclick="$('#updBar').remove()">Później</button>`}</div>`);
+  try{typeof chatChime==='function'&&chatChime()}catch(e){}
+}
+function verTick(){const l=Math.max(0,UPD.until-Date.now()),e=$('#updLeft');if(e)e.textContent=`${Math.floor(l/60000)}:${pad(Math.floor(l/1000)%60)}`;if(!l){clearInterval(UPD.timer);verRelogin()}}
+async function verRelogin(){clearInterval(UPD.timer);try{await $('#logout').onclick()}catch(e){}location.reload()}
+verCheck();setInterval(()=>{if(document.visibilityState==='visible')verCheck()},180000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')verCheck()});
+
 /* --- menu i router --- */
 function renderShell(){
   const cnt=typeof nzBadge==='function'?nzBadge():0;

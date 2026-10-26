@@ -4,6 +4,7 @@ import asyncio, json, os, urllib.request
 from playwright.async_api import async_playwright
 HERE=os.path.dirname(os.path.abspath(__file__))+'/'
 U=os.environ.get('NZ_URL','http://localhost:8766/index.html'); SH=HERE+'shim.js'; LF=HERE+'node_modules/leaflet/dist/'
+VER_OVR={}
 res=[]; ok=lambda c,m:(res.append(bool(c)),print(('✅ ' if c else '❌ ')+m))
 def sql(q,p=[]):
   r=urllib.request.urlopen(urllib.request.Request('http://localhost:9900/sql',data=json.dumps({'sql':q,'params':p}).encode(),method='POST')).read();return json.loads(r).get('data')
@@ -16,6 +17,7 @@ async def main():
       u=r.request.url
       if 'supabase-js' in u: return await r.fulfill(path=SH,content_type='application/javascript')
       if 'unpkg.com/leaflet' in u: return await r.fulfill(path=LF+u.split('/dist/')[1],content_type='text/css' if u.endswith('.css') else 'application/javascript')
+      if 'version.json' in u and VER_OVR: return await r.fulfill(body=json.dumps(VER_OVR),content_type='application/json')
       if 'localhost' in u: return await r.continue_()
       await r.abort()
     await c.route('**/*',rt)
@@ -249,6 +251,16 @@ async def main():
         if w==844: await pg.click('#chatFab'); await pg.wait_for_timeout(500); bx=await pg.locator('#chatBox').bounding_box(); okk=okk and bx['y']>=0 and bx['y']+bx['height']<=h; await pg.screenshot(path=HERE+'czat_poziomo.png'); await pg.click('#chatFab')
         if w==390: await pg.click('#chatFab'); await pg.wait_for_timeout(500); bx=await pg.locator('#chatBox').bounding_box(); okk=okk and bx['x']>=0 and bx['x']+bx['width']<=w; await pg.screenshot(path=HERE+'czat_pionowo.png'); await pg.click('#chatFab')
       ok(okk,'Czat: dymek w prawym dolnym rogu na każdej zakładce, telefon pionowo i poziomo')
+    if 'index.html' in U:   # --- powiadomienie o nowej wersji
+      await pg.set_viewport_size({'width':1440,'height':950}); await nav('#/pielegniarki',600)
+      VER_OVR.update({'version':'9.9.0','notes':'Testowa zmiana','relogin':False}); await pg.evaluate('verCheck()'); await pg.wait_for_timeout(400)
+      ok(await pg.is_visible('#updBar') and '9.9.0' in await T('#updBar') and 'Odśwież' in await T('#updBar'),'Nowa wersja: pasek „Odśwież” u zalogowanych')
+      await pg.screenshot(path=HERE+'nowa_wersja.png'); await pg.click('#updBar button:has-text("Później")')
+      VER_OVR.update({'version':'9.9.1','relogin':True}); await pg.evaluate('verCheck()'); await pg.wait_for_timeout(1300)
+      ok('Zaloguj ponownie' in await T('#updBar') and ':' in await T('#updLeft'),'Nowa wersja wymagająca logowania: odliczanie i „Zaloguj ponownie”')
+      await pg.click('#updBar button:has-text("Zaloguj ponownie")'); await pg.wait_for_timeout(1800)
+      ok(await pg.is_visible('#login') and not await pg.is_visible('#updBar'),'Po „Zaloguj ponownie”: wylogowanie i nowa wersja')
+      VER_OVR.clear()
     if os.environ.get('COLLECT'): json.dump(sorted(COL),open(os.environ['COLLECT'],'w'),ensure_ascii=False,indent=0)
     print('ERR',[e for e in errs if 'favicon' not in e]); print(f'WYNIK: {sum(res)}/{len(res)}')
     await b.close()

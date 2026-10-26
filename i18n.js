@@ -123,6 +123,10 @@ const I18N_ROWS=[
 ['Numer zmienia Administrator albo właściciel konta','Номер змінює Адміністратор або власник облікового запису','The number is changed by the Administrator or the account owner'],
 ['Status ustawia Administrator / dyspozytor','Статус встановлює Адміністратор / диспетчер','Status is set by the Administrator / dispatcher'],
 ['jest dostępny','доступний','is available'],['są dostępni','доступні','are available'],
+['🔄 Jest nowa wersja panelu: v{n}.{n}.{n}','🔄 Є нова версія панелі: v{n}.{n}.{n}','🔄 A new panel version is available: v{n}.{n}.{n}'],
+['🔄 Nowa wersja wymaga ponownego zalogowania: v{n}.{n}.{n}','🔄 Нова версія потребує повторного входу: v{n}.{n}.{n}','🔄 The new version requires signing in again: v{n}.{n}.{n}'],
+['Automatyczne wylogowanie za','Автоматичний вихід через','Automatic sign-out in'],
+['Odśwież','Оновити','Refresh'],['Później','Пізніше','Later'],['Zaloguj ponownie','Увійти знову','Sign in again'],
 // --- role
 ['Administrator','Адміністратор','Administrator'],
 ['Pełnomocnik','Повірений','Attorney'],

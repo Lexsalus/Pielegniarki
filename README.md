@@ -8,6 +8,8 @@ Panel administratora według projektu „Zakładka Pielęgniarki” (23.10.2026)
 
 Numer wersji jest w jednym miejscu: `version.json` (pokazywany przy nazwie na ekranie logowania i w lewym pasku). Przy każdym wysłaniu zmian: `py bump.py patch|minor|major "opis"` — podbija numer i dopisuje wpis do `CHANGELOG.md`. Numeracja jest niezależna od PiK (osobna aplikacja, osobny `version.json`).
 
+Powiadomienie o nowej wersji: zalogowani dostają pasek „Jest nowa wersja” z opisem (sprawdzane co 3 min i po powrocie do karty) i przyciskiem „Odśwież”. Gdy wersja wymaga ponownego logowania: `py bump.py minor --relogin "opis"` — pasek „Zaloguj ponownie” z odliczaniem, po 5 min automatyczne wylogowanie. Ekran logowania wczytuje nową wersję sam.
+
 ## Pliki
 
 ```
@@ -48,7 +50,7 @@ Pielęgniarka widzi tylko siebie i własne zlecenia (bez ceny dla klienta i mar�
 
 ## Testy
 
-`supabase/test/` — opis w `supabase/test/e2e/README.md`. Wynik 26.10.2026: reguły bazy 176/176, interfejs 84/84.
+`supabase/test/` — opis w `supabase/test/e2e/README.md`. Wynik 26.10.2026: reguły bazy 176/176, interfejs 87/87.
 
 ## Rozstrzygnięcia tam, gdzie projekt milczy (do potwierdzenia albo zmiany)
 

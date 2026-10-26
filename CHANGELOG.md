@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.2.0] — 2026-10-26
+- Powiadomienie o nowej wersji: pasek „Odśwież”, a przy wersji wymagającej ponownego logowania — „Zaloguj ponownie” z odliczaniem 5 min
+
 ## [1.1.0] — 2026-10-26
 - Telefon przy osobie (Konta, komunikator — szybkie połączenie 📞); status Administratora / dyspozytora: Dostępny / Zajęty / Niewidoczny, zapamiętywany po wylogowaniu; komunikat z dźwiękiem, gdy Administrator staje się dostępny (migracja 007)
 

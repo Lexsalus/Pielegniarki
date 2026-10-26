@@ -1,4 +1,6 @@
 {
-  "version": "1.1.0",
-  "date": "2026-10-26"
+  "version": "1.2.0",
+  "date": "2026-10-26",
+  "notes": "Powiadomienie o nowej wersji: pasek „Odśwież”, a przy wersji wymagającej ponownego logowania — „Zaloguj ponownie” z odliczaniem 5 min",
+  "relogin": false
 }
