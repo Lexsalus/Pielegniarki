@@ -180,6 +180,10 @@ tr.click{cursor:pointer}tr.click:hover td{background:var(--card2)}
 .nztop{flex:1;min-width:0;margin:0;border-bottom:0;align-self:stretch;align-items:stretch}
 .nztop .tab{display:flex;align-items:center;gap:6px;border-bottom-width:3px}
 @media(max-width:760px){.top{flex-wrap:wrap}.nztop{order:3;flex-basis:100%}}
+.hlp{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--line);color:var(--mut);font-size:.68rem;font-weight:700;margin-left:5px;cursor:help;vertical-align:middle;flex:none;line-height:1}
+.hlp:hover,.hlp:focus{color:var(--txt);border-color:var(--accent);outline:0}
+#tip{position:fixed;z-index:9999;max-width:300px;background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:.8rem;font-weight:500;line-height:1.35;box-shadow:0 6px 24px rgba(0,0,0,.35);pointer-events:none;opacity:0;transition:opacity .12s;white-space:normal;text-align:left}
+#tip.show{opacity:1}
 </style>
 </head>
 <body>
@@ -190,8 +194,8 @@ tr.click{cursor:pointer}tr.click:hover td{background:var(--card2)}
     <div class="top">
       <nav class="tabs nztop" id="nzTop"></nav>
       <div class="me">
-        <div style="position:relative"><button class="icon-btn" id="bell" title="Powiadomienia">🔔</button><div class="sres" id="ntBox" style="right:0;left:auto;width:min(380px,90vw);max-height:70vh;overflow:auto;top:44px"></div></div>
-        <button class="icon-btn" id="theme" title="Motyw">🌓</button>
+        <div style="position:relative"><button class="icon-btn" id="bell" data-tip="Powiadomienia: propozycje zleceń, zlecenia dla dyspozytora, zmiany do zatwierdzenia">🔔</button><div class="sres" id="ntBox" style="right:0;left:auto;width:min(380px,90vw);max-height:70vh;overflow:auto;top:44px"></div></div>
+        <button class="icon-btn" id="theme" data-tip="Motyw jasny / ciemny">🌓</button>
         <div id="meBox" style="display:flex;gap:10px;align-items:center"></div>
         <button class="btn sm" id="logout">Wyloguj</button>
       </div>
@@ -250,11 +254,22 @@ const th=store.get('theme');if(th)document.documentElement.dataset.theme=th;
 $('#theme').onclick=()=>{const v=document.documentElement.dataset.theme==='light'?'dark':'light';document.documentElement.dataset.theme=v;store.set('theme',v)};
 
 
+
+/* --- podpowiedzi: [data-tip] (najechanie / fokus) i ikonki [?] --- */
+const hlp=t=>`<span class="hlp" tabindex="0" data-tip="${esc(t)}">?</span>`;
+{const tip=document.createElement('div');tip.id='tip';tip.setAttribute('role','tooltip');document.body.appendChild(tip);let cur=null;
+ const show=el=>{cur=el;tip.textContent=el.dataset.tip;tip.classList.add('show');const r=el.getBoundingClientRect(),w=tip.offsetWidth,h=tip.offsetHeight;
+   let x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8),y=r.bottom+8;if(y+h>innerHeight-8)y=r.top-h-8;tip.style.left=x+'px';tip.style.top=y+'px'};
+ const hide=()=>{cur=null;tip.classList.remove('show')};
+ document.addEventListener('mouseover',e=>{const el=e.target.closest?.('[data-tip]:not([data-tip=""])');if(el&&el!==cur)show(el);else if(!el&&cur)hide()});
+ document.addEventListener('focusin',e=>{const el=e.target.closest?.('[data-tip]:not([data-tip=""])');el?show(el):hide()});
+ document.addEventListener('focusout',hide);addEventListener('scroll',hide,true);document.addEventListener('click',e=>{if(!e.target.closest?.('.hlp'))hide()});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape')hide()});}
 /* --- menu i router --- */
 function renderShell(){
   const cnt=typeof nzBadge==='function'?nzBadge():0;
   const pg=location.hash.split('/')[1]||'pielegniarki';
-  $('#side').innerHTML=`<div class="brand"><i>🩺</i>Pielęgniarki</div><a class="nav ${pg==='pielegniarki'?'on':''}" href="#/pielegniarki">🩺 Pielęgniarki${cnt?`<span class="cnt">${cnt}</span>`:''}</a>${ME.role==='admin'?`<a class="nav ${pg==='aktywni'?'on':''}" href="#/aktywni">🟢 Aktywni</a><a class="nav ${pg==='podglad'?'on':''}" href="#/podglad">👁 Podgląd</a>`:''}<div class="sp"></div>`;
+  $('#side').innerHTML=`<div class="brand"><i>🩺</i>Pielęgniarki</div><a class="nav ${pg==='pielegniarki'?'on':''}" href="#/pielegniarki">🩺 Pielęgniarki${cnt?`<span class="cnt">${cnt}</span>`:''}</a>${ME.role==='admin'?`<a class="nav ${pg==='aktywni'?'on':''}" href="#/aktywni" data-tip="Kto jest teraz zalogowany (otwarty panel w ciągu ostatnich 2 minut).">🟢 Aktywni</a><a class="nav ${pg==='podglad'?'on':''}" href="#/podglad" data-tip="Panel oczami wybranej roli lub osoby — tylko do odczytu.">👁 Podgląd</a>`:''}<div class="sp"></div>`;
   const un=(DB.notifs||[]).filter(n=>!n.read_at).length;$('#bell').innerHTML='🔔'+(un?`<span class="dot">${un}</span>`:'');
   $('#meBox').innerHTML=`<span class="av" style="background:${esc(ME.color||'#7c5cff')}">${esc(initials(ME.name||'?'))}</span><div><b>${esc(ME.name)}</b><small>${esc(ROLES[ME.role]||'')}</small></div>`;
 }
