@@ -68,6 +68,9 @@ async def main():
     await login('nowak@k.test')
     m=await pg.eval_on_selector_all('#side a.nav','e=>e.map(x=>x.innerText)')
     ok(any('Pielęgniarki' in x for x in m) and not any(k in ' '.join(m) for k in ['Sprawy','Pulpit','Zespół','Finanse']),'pielęgniarka: tylko własny panel w menu (bez spraw kancelarii)')
+    ok(not any('Aktywni' in x for x in m),'pielęgniarka: brak widoku „Aktywni” w menu')
+    await nav('#/aktywni'); ok(await pg.is_visible('.forbid'),'pielęgniarka: „Aktywni” niedostępne (403)')
+    await nav('#/pielegniarki')
     ok('Anna Nowak' in await T('#view') and 'Moje zlecenia' in await T('main'),'pielęgniarka po zalogowaniu trafia do swojego panelu')
     await nav('#/sprawy'); ok(await pg.is_visible('.forbid') or 'Brak' in await T('#view'),'pielęgniarka: sprawy kancelarii niedostępne')
     await nav('#/pielegniarki/obszar',1300)
@@ -160,6 +163,12 @@ async def main():
     if 'crm.html' in U:
       await nav('#/ustawienia/audyt',900); await pg.click('text=Sprawdź łańcuch skrótów'); await pg.wait_for_timeout(700); ok('poprawny' in await toast(),'łańcuch audytu poprawny po scenariuszu')
       a=await T('#view'); ok('zlecenie.utworzone' in a and 'pielegniarka.obszar_zatwierdzony' in a,'audyt: zlecenia i zatwierdzenia obszarów')
+    if 'index.html' in U:
+      m=await pg.eval_on_selector_all('#side a.nav','e=>e.map(x=>x.innerText)'); ok(any('Aktywni' in x for x in m),'Administrator: „Aktywni” w lewym menu')
+      await nav('#/aktywni',1200); a=await T('#view')
+      ok('Aktywny teraz' in a and 'Admin' in a and 'Wylogowany' in a,'Aktywni: Administrator aktywny teraz, wylogowana pielęgniarka')
+      ok(await T('#nzTop')=='','Aktywni: bez zakładek panelu w górnym pasku')
+      await pg.screenshot(path=HERE+'aktywni.png')
     print('ERR',[e for e in errs if 'favicon' not in e]); print(f'WYNIK: {sum(res)}/{len(res)}')
     await b.close()
 asyncio.run(main())

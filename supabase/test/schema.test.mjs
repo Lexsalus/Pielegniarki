@@ -269,3 +269,18 @@ R(!!await fails('admin',`select public.create_nurse_order($1)`,[JSON.stringify({
 await as('nowak',`update public.nurse_settings set overlap_mode='distance'`).catch(()=>{});
 R((await db.query('select overlap_mode from public.nurse_settings')).rows[0].overlap_mode==='rule','ustawienia zmienia tylko Administrator');
 R((await db.query(`select count(*)::int n from public.audit_log where action like 'zlecenie.%' or action like 'pielegniark%'`)).rows[0].n>10,'operacje na pielęgniarkach i zleceniach w audycie');
+// --- Aktywni (migracja 005)
+await as('nowak',`select public.presence_ping('login')`);await as('admin',`select public.presence_ping('ping')`);
+let ak=(await as('admin',`select * from public.active_users()`)).rows;
+R(ak.find(r=>r.user_id===U.admin)?.online&&ak.find(r=>r.email==='nowak@k.test')?.online,'Aktywni: zalogowani widoczni jako aktywni teraz');
+R((await as('nowak',`select * from public.active_users()`)).rows.length===0&&(await as('nowak',`select * from public.user_presence`)).rows.length===0,'Aktywni: pielęgniarka nie widzi listy');
+R(!!await fails('nowak',`insert into public.user_presence(user_id) values($1)`,[U.admin]),'Aktywni: zapis tylko przez funkcję');
+R(!!await fails('nowak',`select public.presence_ping('x')`),'Aktywni: nieznany stan odrzucony');
+await db.exec(`update public.user_presence set last_seen=now()-interval '5 minutes' where user_id=(select id from public.profiles where email='nowak@k.test')`);
+R(!(await as('admin',`select * from public.active_users()`)).rows.find(r=>r.email==='nowak@k.test').online,'Aktywni: brak sygnału > 2 min → nieaktywny');
+await as('nowak',`select public.presence_ping('login')`);await as('nowak',`select public.presence_ping('logout')`);
+ak=(await as('admin',`select * from public.active_users()`)).rows.find(r=>r.email==='nowak@k.test');
+R(!ak.online&&ak.logout_at,'Aktywni: wylogowanie → nieaktywny');
+await db.exec(`update public.user_presence set last_seen=now()-interval '5 minutes' where user_id='${U.admin}'`);
+AAL='aal1';await as('admin',`select public.presence_ping('ping')`);AAL='aal2';
+R(!(await as('admin',`select * from public.active_users()`)).rows.find(r=>r.user_id===U.admin).online,'Aktywni: sesja Administratora bez 2FA nie liczy się');

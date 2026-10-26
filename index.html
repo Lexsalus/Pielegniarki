@@ -253,7 +253,8 @@ $('#theme').onclick=()=>{const v=document.documentElement.dataset.theme==='light
 /* --- menu i router --- */
 function renderShell(){
   const cnt=typeof nzBadge==='function'?nzBadge():0;
-  $('#side').innerHTML=`<div class="brand"><i>🩺</i>Pielęgniarki</div><a class="nav on" href="#/pielegniarki">🩺 Pielęgniarki${cnt?`<span class="cnt">${cnt}</span>`:''}</a><div class="sp"></div>`;
+  const pg=location.hash.split('/')[1]||'pielegniarki';
+  $('#side').innerHTML=`<div class="brand"><i>🩺</i>Pielęgniarki</div><a class="nav ${pg==='pielegniarki'?'on':''}" href="#/pielegniarki">🩺 Pielęgniarki${cnt?`<span class="cnt">${cnt}</span>`:''}</a>${ME.role==='admin'?`<a class="nav ${pg==='aktywni'?'on':''}" href="#/aktywni">🟢 Aktywni</a>`:''}<div class="sp"></div>`;
   const un=(DB.notifs||[]).filter(n=>!n.read_at).length;$('#bell').innerHTML='🔔'+(un?`<span class="dot">${un}</span>`:'');
   $('#meBox').innerHTML=`<span class="av" style="background:${esc(ME.color||'#7c5cff')}">${esc(initials(ME.name||'?'))}</span><div><b>${esc(ME.name)}</b><small>${esc(ROLES[ME.role]||'')}</small></div>`;
 }
@@ -262,11 +263,27 @@ function route(){
   if(!ME)return;renderShell();
   const [,page='pielegniarki',a,b]=location.hash.split('/');
   const V=$('#view');window.scrollTo(0,0);
+  const tb=$('#nzTop');if(tb)tb.innerHTML='';
   try{const fn=ROUTES[page];if(!fn)throw new Forbidden('Nie ma takiej strony');V.innerHTML=fn(a,b)||'';ROUTES[page].after?.(a,b)}
   catch(e){if(e.code===403)V.innerHTML=`<div class="forbid"><b>403</b><h2>Brak dostępu</h2><p class="mut" style="margin:8px 0 18px">${esc(e.message)}</p><a class="btn" href="#/pielegniarki">← Wróć</a></div>`;else{console.error(e);V.innerHTML=`<div class="empty">Błąd: ${esc(e.message)}</div>`}}
 }
 addEventListener('hashchange',route);
 const rerender=()=>route();
+
+/* --- Aktywni: kto jest teraz zalogowany (tylko Administrator) --- */
+const ping=st=>sb.rpc('presence_ping',{p_state:st}).then(()=>{},()=>{});
+setInterval(()=>{if(ME)ping('ping')},60000);
+const dt=v=>v?new Date(v).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+const ago=v=>{if(!v)return '—';const m=Math.round((Date.now()-new Date(v))/60000);return m<1?'przed chwilą':m<60?m+' min temu':m<1440?Math.floor(m/60)+' godz. temu':dt(v)};
+ROUTES.aktywni=()=>{if(ME.role!=='admin')throw new Forbidden('Widok tylko dla Administratora');
+  return `<div class="ph"><div><h1>Aktywni <span class="mut" style="font-size:.95rem;font-weight:600" id="akSum"></span></h1></div><button class="btn" onclick="akLoad()">Odśwież</button></div><div class="card" id="akBox"><div class="empty">Wczytywanie…</div></div><p class="mut" style="font-size:.8rem;margin-top:8px">Aktywny teraz = otwarty panel, sygnał w ciągu ostatnich 2 minut. Lista odświeża się co minutę.</p>`};
+ROUTES.aktywni.after=()=>akLoad();
+async function akLoad(){const box=$('#akBox');if(!box)return;
+  const {data,error}=await sb.rpc('active_users');if(!$('#akBox'))return;
+  if(error){box.innerHTML=`<div class="empty">Błąd: ${esc(errMsg(error))}</div>`;return}
+  const rows=data||[],on=rows.filter(r=>r.online).length;$('#akSum').textContent=`${on} teraz · ${rows.length} kont aktywnych`;
+  box.innerHTML=rows.length?`<div class="tw"><table><tr><th>Użytkownik</th><th>Rola</th><th>Status</th><th>Zalogowany od</th><th>Ostatnia aktywność</th></tr>${rows.map(r=>`<tr><td><b>${esc(r.full_name||r.email)}</b><br><small class="mut">${esc(r.email)}</small></td><td>${esc(ROLES[r.role]||r.role)}</td><td>${r.online?'<span class="badge b-good">● Aktywny teraz</span>':r.logout_at?'<span class="badge">Wylogowany</span>':'<span class="badge">Nieaktywny</span>'}</td><td>${r.online?dt(r.login_at):'—'}</td><td>${r.logout_at?'wylogowanie '+ago(r.logout_at):ago(r.last_seen)}</td></tr>`).join('')}</table></div>`:'<div class="empty">Brak kont</div>'}
+setInterval(()=>{if(ME&&location.hash.startsWith('#/aktywni')&&document.visibilityState==='visible')akLoad()},60000);
 
 /* =====================================================================
    Supabase (ta sama baza co CRM kancelarii: projekt CRMKP)
@@ -361,13 +378,13 @@ async function afterSignIn(){
   loginView('loading');
   ME={id:p.id,name:p.full_name||p.email,role:p.role,email:p.email,color:p.color};
   try{await reload()}catch(e){console.error(e);return toast('Nie udało się wczytać danych: '+errMsg(e),true)}
-  if(!sessionStorage.getItem('crm_logged_'+p.id)){sessionStorage.setItem('crm_logged_'+p.id,1);sb.rpc('log_login',{p_action:'logowanie'})}
+  if(!sessionStorage.getItem('crm_logged_'+p.id)){sessionStorage.setItem('crm_logged_'+p.id,1);sb.rpc('log_login',{p_action:'logowanie'});ping('login')}else ping('ping');
   $('#login').style.display='none';$('#app').style.display='grid';
   if(!can('nurses')){await sb.auth.signOut();return loginView('noperm',{email:user.email})}
-  if(!location.hash.startsWith('#/pielegniarki'))location.hash='#/pielegniarki';else route();
+  if(!/^#\/(pielegniarki|aktywni)/.test(location.hash))location.hash='#/pielegniarki';else route();
 }
 function renderLogin(){loginView('password')}
-$('#logout').onclick=async()=>{try{await sb.rpc('log_login',{p_action:'wylogowanie'})}catch(e){}await sb.auth.signOut();sessionStorage.clear();ME=null;DB=null;$('#app').style.display='none';$('#login').style.display='grid';loginView('password');history.replaceState(null,'',location.pathname)};
+$('#logout').onclick=async()=>{try{await sb.rpc('log_login',{p_action:'wylogowanie'});await ping('logout')}catch(e){}await sb.auth.signOut();sessionStorage.clear();ME=null;DB=null;$('#app').style.display='none';$('#login').style.display='grid';loginView('password');history.replaceState(null,'',location.pathname)};
 
 
 sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY'){$('#login').style.display='grid';$('#app').style.display='none';loginView('newpass')}});
