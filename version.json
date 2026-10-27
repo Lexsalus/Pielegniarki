@@ -1,6 +1,6 @@
 {
-  "version": "1.9.2",
+  "version": "1.9.3",
   "date": "2026-10-27",
-  "notes": "Migracja 014: usunięcie ostatnich resztek CRM kancelarii (uprawnienia kancelarii, tabela PESEL, klucz szyfrowania) — czeka na wdrożenie",
+  "notes": "Migracja 014 wdrożona (resztki CRM kancelarii usunięte); README: aktualne zadania pg_cron",
   "relogin": false
 }

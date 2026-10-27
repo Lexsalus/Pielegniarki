@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.9.3] — 2026-10-27
+- Migracja 014 wdrożona (resztki CRM kancelarii usunięte); README: aktualne zadania pg_cron
+
 ## [1.9.2] — 2026-10-27
 - Migracja 014: usunięcie ostatnich resztek CRM kancelarii (uprawnienia kancelarii, tabela PESEL, klucz szyfrowania) — czeka na wdrożenie
 
