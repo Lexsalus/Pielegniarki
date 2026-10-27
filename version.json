@@ -1,6 +1,6 @@
 {
-  "version": "1.8.2",
+  "version": "1.8.3",
   "date": "2026-10-27",
-  "notes": "⏏ Wyloguj działa natychmiast, także na starych wersjach panelu (migracja 013)",
+  "notes": "Lewe menu: „Aktywni” → „Użytkownicy”",
   "relogin": false
 }

@@ -35,7 +35,7 @@ addEventListener('unhandledrejection',e=>logAdd('error',String(e.reason?.message
 {const t0=toast;toast=function(m,err){if(err)logAdd('error',String(m||''),'komunikat na ekranie');return t0.apply(this,arguments)}}
 {const lo=$('#logout').onclick;$('#logout').onclick=async e=>{logAdd('info','wylogowanie');await logFlush();return lo(e)}}
 
-/* ---- podgląd logów (Administrator, „Aktywni” → 📋) ---- */
+/* ---- podgląd logów (Administrator, „Użytkownicy” → 📋) ---- */
 const LOGK={click:['Kliknięcie',''],nav:['Widok','b-info'],error:['Błąd','b-bad'],info:['Info','']};
 async function logView(uid){const who=AKROWS.find(r=>r.user_id===uid);const name=who?.full_name||who?.email||'';LOG.v={uid,h:24,err:false,name};
   modal('Logi: '+name,`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px"><select class="f" id="lgH" style="width:auto"><option value="1">ostatnia godzina</option><option value="24" selected>24 godziny</option><option value="168">7 dni</option><option value="720">30 dni</option></select>

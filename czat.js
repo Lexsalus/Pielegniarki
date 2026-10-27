@@ -103,7 +103,7 @@ function chatAvail(){const L=(CH.state?.contacts||[]).filter(c=>c.staff);const f
   if(fresh.length){toast('🟢 '+fresh.map(c=>c.full_name).join(', ')+' — '+(fresh.length>1?'są dostępni':'jest dostępny'));chatChime()}}
 {const st=chatStop;chatStop=function(){st();CH.av=null}}
 
-/* lewy pasek → „Aktywni”: liczba innych osób zalogowanych teraz; nikt → czerwona kropka */
+/* lewy pasek → „Użytkownicy”: liczba innych osób zalogowanych teraz; nikt → czerwona kropka */
 function chatOnlineNav(){const a=document.querySelector('#side a[href="#/aktywni"]');if(!a)return;a.querySelector('.onl')?.remove();if(!CH.state)return;
   const n=(CH.state.contacts||[]).filter(c=>c.online).length;
   a.insertAdjacentHTML('beforeend',n?`<span class="cnt n onl" data-tip="Zalogowanych teraz (bez Ciebie): ${n}">${n}</span>`:`<span class="onl offdot" data-tip="Nikt inny nie jest teraz zalogowany"></span>`)}

@@ -160,9 +160,9 @@ const I18N_ROWS=[
 ['Aplikant — bez dostępu','Стажист — без доступу','Trainee — no access'],
 ['Biuro — bez dostępu','Офіс — без доступу','Office — no access'],
 ['Obsługa techniczna — bez dostępu','Технічна підтримка — без доступу','Technical support — no access'],
-// --- lewe menu: Aktywni, Podgląd
-['🟢 Aktywni','🟢 Активні','🟢 Active'],
-['Aktywni','Активні','Active'],
+// --- lewe menu: Użytkownicy, Podgląd
+['🟢 Użytkownicy','🟢 Користувачі','🟢 Users'],
+['Użytkownicy','Користувачі','Users'],
 ['Kto jest teraz zalogowany (otwarty panel w ciągu ostatnich {n} minut).','Хто зараз у системі (панель відкрита протягом останніх {n} хвилин).','Who is signed in now (panel open within the last {n} minutes).'],
 ['Aktywny teraz = otwarty panel, sygnał w ciągu ostatnich {n} minut. Lista odświeża się co minutę.','Активний зараз = відкрита панель, сигнал протягом останніх {n} хвилин. Список оновлюється щохвилини.','Active now = panel open, signal within the last {n} minutes. The list refreshes every minute.'],
 ['{n} teraz · {n} kont aktywnych','{n} зараз · {n} активних облікових записів','{n} now · {n} active accounts'],

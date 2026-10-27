@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.8.3] — 2026-10-27
+- Lewe menu: „Aktywni” → „Użytkownicy”
+
 ## [1.8.2] — 2026-10-27
 - ⏏ Wyloguj działa natychmiast, także na starych wersjach panelu (migracja 013)
 
