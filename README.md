@@ -26,7 +26,7 @@ supabase/           schema.sql (użytkownicy, role, audyt, powiadomienia) + migr
 
 Supabase, projekt **CRM Pielęgniarki** (dawniej „CRMKP”; `ixlhfhzgzotukstoezcj`, UE, Irlandia) — tylko dla tego panelu (od 26.10.2026 PiK ma własną bazę — projekt „Porównywarka”). Wdrożone: `schema.sql`, migracje 002–005 („Użytkownicy”, „Podgląd” — wdrożona 26.10.2026); 006 (komunikator) — wdrożona 26.10.2026; 007 (telefon, status) — wdrożona 26.10.2026; 008 (powiadomienie o odczycie) — wdrożona 26.10.2026; 009 (poprawki bezpieczeństwa) — wdrożona 26.10.2026; 010 (usunięcie pustych tabel CRM kancelarii) — wdrożona 26.10.2026; 011 (polecenia Administratora) — wdrożona 26.10.2026; 012 (logi działań, urządzenie przy osobie) — wdrożona 26.10.2026; 013 (wylogowanie natychmiast) — wdrożona 27.10.2026; zasady haseł: min. 10 znaków, małe i wielkie litery, cyfra; zmiana hasła wymaga ponownego potwierdzenia, pg_cron `zlecenia-limit-czasu` (co minutę) i `przypomnienia-terminy`. Logowanie (Auth): Site URL i Redirect URLs — `https://lexsalus.github.io/Pielegniarki/`; rejestracja wyłączona, 2FA (TOTP) włączone.
 
-Pozostałości po CRM kancelarii (puste tabele spraw, klientów, finansów, terminów, zgłoszeń) usunięte migracją 010 (26.10.2026). Pusty folder plików „akta” w Storage zostaje bez reguł dostępu — można go usunąć ręcznie w panelu Supabase.
+Pozostałości po CRM kancelarii (puste tabele spraw, klientów, finansów, terminów, zgłoszeń) usunięte migracją 010 (26.10.2026). Folder „akta” w Storage usunięty. Zostały drobne pozostałości do decyzji: wpisy uprawnień CRM kancelarii w `role_permissions` (używane jest tylko `nurses`), pusta tabela `private.client_pesel` i klucz szyfrowania PESEL w `private.app_secrets`. Plik `supabase/schema.sql` i migracje 002–003 to nadal schemat CRM kancelarii — przy świeżej instalacji tworzą jego tabele, które usuwa migracja 010.
 
 Klucz w `index.html` to klucz publiczny (`sb_publishable_…`) — może być jawny; dostęp ogranicza baza (RLS). Nigdy nie wpisywać klucza `sb_secret_…`.
 
@@ -54,7 +54,6 @@ Klucz w `index.html` to klucz publiczny (`sb_publishable_…`) — może być ja
 - Lista kont: każdy widzi siebie, Administrator / dyspozytor — wszystkich, pozostali tylko osoby, z którymi mogą pisać.
 - Wylogowanie po 30 min bezczynności.
 - Odświeżanie: co minutę lekkie sprawdzenie najnowszego powiadomienia, pełne pobranie po nowym powiadomieniu albo co 5 min; powiadomienia i czat na żywo (Realtime), zapasowe sprawdzanie czatu co 30 s.
-- Zgłoszenia ze strony (`leads`, pozostałość po CRM kancelarii) bez zapisu anonimowego.
 - Podpisy kontrolne (SRI) bibliotek z CDN: Supabase i Leaflet — przeglądarka odrzuci zmieniony plik (przy zmianie wersji biblioteki trzeba podać nowy odcisk).
 - Do decyzji: adresy pacjentów wysyłane do OpenStreetMap / Google przy wyszukiwaniu i liczeniu dojazdu. (Usunięcie pustych tabel CRM kancelarii — zrobione, migracja 010.)
 

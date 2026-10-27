@@ -1,6 +1,6 @@
 {
-  "version": "1.9.0",
+  "version": "1.9.1",
   "date": "2026-10-27",
-  "notes": "Logi: sortowanie po kliknięciu nagłówka kolumny (drugie kliknięcie odwraca kolejność), eksport CSV w tej samej kolejności; tabela logów widoczna także na telefonie",
+  "notes": "README: stan pozostałości po CRM kancelarii (folder akta usunięty, tabela leads usunięta; drobne resztki do decyzji)",
   "relogin": false
 }

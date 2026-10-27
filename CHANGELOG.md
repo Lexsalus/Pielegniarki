@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.9.1] — 2026-10-27
+- README: stan pozostałości po CRM kancelarii (folder akta usunięty, tabela leads usunięta; drobne resztki do decyzji)
+
 ## [1.9.0] — 2026-10-27
 - Logi: sortowanie po kliknięciu nagłówka kolumny (drugie kliknięcie odwraca kolejność), eksport CSV w tej samej kolejności; tabela logów widoczna także na telefonie
 
