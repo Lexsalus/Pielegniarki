@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.8.4] — 2026-10-27
+- Użytkownicy: ikonka 👥 i nowa podpowiedź
+
 ## [1.8.3] — 2026-10-27
 - Lewe menu: „Aktywni” → „Użytkownicy”
 
