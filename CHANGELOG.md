@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.9.2] — 2026-10-27
+- Migracja 014: usunięcie ostatnich resztek CRM kancelarii (uprawnienia kancelarii, tabela PESEL, klucz szyfrowania) — czeka na wdrożenie
+
 ## [1.9.1] — 2026-10-27
 - README: stan pozostałości po CRM kancelarii (folder akta usunięty, tabela leads usunięta; drobne resztki do decyzji)
 

@@ -1,6 +1,6 @@
 {
-  "version": "1.9.1",
+  "version": "1.9.2",
   "date": "2026-10-27",
-  "notes": "README: stan pozostałości po CRM kancelarii (folder akta usunięty, tabela leads usunięta; drobne resztki do decyzji)",
+  "notes": "Migracja 014: usunięcie ostatnich resztek CRM kancelarii (uprawnienia kancelarii, tabela PESEL, klucz szyfrowania) — czeka na wdrożenie",
   "relogin": false
 }

@@ -439,3 +439,8 @@ await as('admin',`select public.client_command($1,'logout')`,[U.nowak]);
 R((await asIat('nowak',t0,`select * from public.my_orders()`)).rows.length===0&&(await asIat('nowak',t0,`select public.chat_state() v`)).rows[0].v.contacts.length===0,'013: stara przepustka odrzucona od razu (zlecenia, czat)');
 R((await asIat('nowak',Math.floor(Date.now()/1000)+5,`select * from public.my_orders()`)).rows.length>=1,'013: nowe logowanie działa');
 R((await as('admin',`select * from public.active_users()`)).rows.length>=3,'013: inni pracują normalnie');
+
+// --- 014: porządki po CRM kancelarii
+R((await db.query(`select string_agg(distinct perm,',' order by perm) p from public.role_permissions`)).rows[0].p==='audit,nurses,users','014: zostały tylko uprawnienia używane przez panel (nurses, users, audit)');
+R(!!(await as('admin',`select * from public.verify_audit_chain()`)).rows.length,'014: Administrator nadal sprawdza dziennik audytu');
+R((await db.query(`select to_regclass('private.app_secrets') t, to_regclass('private.client_pesel') p`)).rows[0].t===null&&(await db.query(`select to_regclass('private.client_pesel') p`)).rows[0].p===null,'014: tabela PESEL i klucz szyfrowania usunięte');
