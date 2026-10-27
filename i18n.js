@@ -147,6 +147,7 @@ const I18N_ROWS=[
 ['{n} wpisów','{n} записів','{n} entries'],['{n} błędów','{n} помилок','{n} errors'],['najnowsze na górze','найновіші вгорі','newest first'],['Brak wpisów w tym okresie','Немає записів за цей період','No entries in this period'],
 ['Telefon','Телефон','Phone'],['Tablet','Планшет','Tablet'],['Komputer','Комп’ютер','Computer'],
 ['Wersja','Версія','Version'],['wersje:','версії:','versions:'],
+['najstarsze na górze','найстаріші вгорі','oldest first'],['sortowanie:','сортування:','sorted by:'],['rosnąco','за зростанням','ascending'],['malejąco','за спаданням','descending'],['Sortuj — kliknij ponownie, aby odwrócić kolejność','Сортувати — натисніть ще раз, щоб змінити порядок','Sort — click again to reverse the order'],
 // --- role
 ['Administrator','Адміністратор','Administrator'],
 ['Pełnomocnik','Повірений','Attorney'],
